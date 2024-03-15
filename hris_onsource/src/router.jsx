@@ -5,6 +5,11 @@ import Register from "./views/Register";
 import GuestLayout from "./Layouts/GuestLayout";
 import DefaultLayout from "./Layouts/DefaultLayout";
 import Dashboard from "./views/Dashboard";
+import Positions from "./views/Positions";
+import Department from "./views/Department";
+import Employees from "./views/Employees";
+import History from "./views/History";
+import Reports from "./views/Reports";
 
 const router = createBrowserRouter([
       {
@@ -12,7 +17,12 @@ const router = createBrowserRouter([
         element: <DefaultLayout />,
         children: [
           { path: "/", element: <Navigate to="/login" /> },
-          { path: "/Dashboard", element: <Dashboard /> },
+          { path: "/dashboard", element: <Dashboard /> },
+          { path: "/positions", element: <Positions /> },
+          { path: "/department", element: <Department />},
+          { path: "/employees", element: <Employees />},
+          { path: "/history", element: <History />},
+          { path: "/reports", element: <Reports />},
         ]
         
       },

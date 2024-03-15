@@ -1,9 +1,36 @@
 import React, { useRef } from 'react'
+import { useAuth } from '../context';
+import axiosClient from '../axiosClient';
 
 
 
 
 function Login() {
+
+  const {setUser, setToken} =  useAuth();
+  const email = useRef();
+  const password = useRef();
+
+  const login = (ev) => {
+    ev.preventDefault();
+
+    const payload = {
+      email: email.current.value,
+      password: password.current.value,
+    }
+
+    axiosClient.post('/login', payload)
+    .then(({data})=>{
+       setToken(data.token)
+       setUser(data.user);
+    }).catch((err)=>{
+        const {response} = err;
+        if (response && response.status === 422) {
+            console.log(response.data.errors);
+            localStorage.removeItem('ACCESS_TOKEN');
+        }
+    })
+  }
 
   return (
     <>
@@ -16,11 +43,13 @@ function Login() {
             <p className="mt-1 block font-sans text-base font-normal leading-relaxed text-gray-700 antialiased">
             Input all the fields
             </p>
-            <form className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96">
+  
+            <form onSubmit={login} className="mt-8 mb-2 w-80 max-w-screen-lg sm:w-96">
             <div className="mb-4 flex flex-col gap-6">
                 
                 <div className="relative h-11 w-full min-w-[200px]">
                 <input
+                    ref={email}
                     className="peer h-full w-full rounded-md border border-blue-gray-200 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-[#00b894] focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
                     placeholder=" "
                 />
@@ -30,6 +59,7 @@ function Login() {
                 </div>
                 <div className="relative h-11 w-full min-w-[200px]">
                 <input
+                    ref={password}
                     type="password"
                     className="peer h-full w-full rounded-md border border-blue-gray-200 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-[#00b894] focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
                     placeholder=" "
@@ -42,7 +72,7 @@ function Login() {
            
             <button
                 className="mt-6 block w-full select-none rounded-lg bg-[#00b894] py-3 px-6 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-pink-500/20 transition-all hover:shadow-lg hover:shadow-[#00b894]/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-                type="button"
+                type="submit"
                 data-ripple-light="true"
             >
                 Login

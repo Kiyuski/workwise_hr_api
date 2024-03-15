@@ -1,15 +1,10 @@
 import React, { useEffect } from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
-import { useAuth } from '../context';
-import { links } from '../links';
 import { useLocation } from 'react-router-dom'
 import axiosClient from '../axiosClient';
-import "./../App.css"
+import { useAuth } from '../context';
+import { links } from '../links';
 
-
-function DefaultLayout() {
-
-  
+function Reports() {
   const location = useLocation();
   const { pathname } = location;
   const {setToken, setUser, user} = useAuth();
@@ -30,16 +25,10 @@ function DefaultLayout() {
     })
   },[])
 
-
-
-  const {token} = useAuth();
-  if(!token) {
-    return <Navigate to='/login' />
-  }
-
+  
   return (
-    <div className="App ">
-       <aside className="ml-[-100%] fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r bg-white transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[15%]">
+    <div>
+        <aside className="ml-[-100%] fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r bg-white transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[15%]">
           <div>
               <div className="-mx-6 px-6 py-4 text-center">
                   <a href="#" title="home">
@@ -50,14 +39,10 @@ function DefaultLayout() {
               </div>
 
               <div className="mt-2 text-center flex justify-center items-center flex-col">
-               
-                  <div class="avatar placeholder">
-                    <div class=" bg-[#00b894] rounded-full w-24 from-[#00b894] to-[#00b894] text-white shadow-[#00b894]/20 shadow-lg">
-                        <span class="text-3xl">{user.name && user.name.split("")[0]}</span>
-                    </div>
-                    </div> 
+                  <div className='w-[100px] shadow-sm'>
+                    <h2 className=' text-[50px] bg-[#00b894] text-white rounded-xl'>{user.name && user.name.split('')[0]}</h2>
+                  </div>
                   <div className=' max-md:hidden flex mt-4 justify-center items-center gap-2'>
-              
                     <h5 className="hidden  text-xl font-semibold text-gray-600 lg:block">{user.name}</h5>
                     /
                     <span className="hidden text-gray-400 lg:block">Admin</span>
@@ -88,18 +73,16 @@ function DefaultLayout() {
               </button>
           </div>
       </aside>
-
-      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] bg-white">
+      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
           <div className="sticky z-10 top-0 h-16 border-b bg-white lg:py-2.5">
               <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
-                <div className='flex  justify-center items-center gap-1'>
-                <svg className="-ml-1 h-10 w-10" viewBox="0 0 24 24" fill="none">
-              <path d="M6 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8ZM6 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-1Z" className="fill-current text-cyan-400 dark:fill-slate-600"></path>
-              <path d="M13 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V8Z" className="fill-current text-cyan-200 group-hover:text-cyan-300"></path>
-              <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
-      </svg>
-                  <h5 hidden className="text-2xl text-gray-600 font-medium lg:block capitalize">{pathname.split("/")[1]}</h5>
-                </div>
+                  <div className='flex justify-center items-center gap-2'>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                    <path className="fill-current text-gray-600 group-hover:text-[#00b894]" d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                    <path className="fill-current text-gray-300 group-hover:text-[#00b894]" d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                </svg>
+                  <h5 hidden className="text-2xl text-gray-600 font-medium lg:block">REPORTS</h5>
+                  </div>
                   <button className="w-12 h-16 -mr-2 border-r lg:hidden">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 my-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -136,10 +119,10 @@ function DefaultLayout() {
                   </div>
               </div>
           </div>
+       
       </div> 
-      <Outlet/>
     </div>
   )
 }
 
-export default DefaultLayout
+export default Reports
