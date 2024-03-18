@@ -11,9 +11,12 @@ function Positions() {
       ev.preventDefault();
 
       if(id){
-         axiosClient.put(`/position/${id}`)
+         axiosClient.put(`/position/${id}?position=${_position}`)
          .then(()=>{
+            alert("Position updated successfully");
+            document.getElementById('my_modal_5').close()
             getListPosition();
+            setPositionId("");
          })
          .catch((err)=>{
             const {response} = err;

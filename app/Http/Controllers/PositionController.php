@@ -50,8 +50,9 @@ class PositionController extends Controller
     public function update(UpdatePositionRequest $request, string $id)
     {
         $data = $request->validated();
-
+        
         $position = Position::find($id);
+
 
         if (!$position) {
             return response()->json([

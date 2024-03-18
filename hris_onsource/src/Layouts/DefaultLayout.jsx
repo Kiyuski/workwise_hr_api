@@ -5,6 +5,7 @@ import { links } from '../links';
 import { useLocation } from 'react-router-dom'
 import axiosClient from '../axiosClient';
 import "./../App.css"
+import { googleLogout } from '@react-oauth/google';
 
 
 function DefaultLayout() {
@@ -15,8 +16,10 @@ function DefaultLayout() {
   const {setToken, setUser, user} = useAuth();
 
   const logOut = () => {
+
     axiosClient.post("/logout")
     .then(()=>{
+        googleLogout();
         setUser({});
         setToken(null);
     })
@@ -27,6 +30,7 @@ function DefaultLayout() {
     axiosClient.get("/user")
     .then(({data}) => {
         setUser(data);
+      
     })
   },[])
 
@@ -50,12 +54,20 @@ function DefaultLayout() {
               </div>
 
               <div className="mt-2 text-center flex justify-center items-center flex-col">
-               
+                 {user.image ? (
+                    <div class="avatar">
+                    <div class="w-24 rounded-full">
+                      <img src={user &&user.image} />
+                    </div>
+                  </div>
+                 ): (
+
                   <div class="avatar placeholder">
                     <div class=" bg-[#00b894] rounded-full w-24 from-[#00b894] to-[#00b894] text-white shadow-[#00b894]/20 shadow-lg">
                         <span class="text-3xl">{user.name && user.name.split("")[0]}</span>
                     </div>
                     </div> 
+                 )}
                   <div className=' max-md:hidden flex mt-4 justify-center items-center gap-2'>
               
                     <h5 className="hidden  text-xl font-semibold text-gray-600 lg:block">{user.name}</h5>

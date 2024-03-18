@@ -21,11 +21,23 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'image' => 'nullable|string', 
+            'provider' => 'nullable|string', 
+        ];
+        
+       
+        if ($this->has('provider') && $this->input('provider') === "GOOGLE") {
+            return $rules;
+        }
+    
+      
+        return array_merge($rules, [
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'confirmed_Password' => 'required|string|same:password',
-        ];
+            'confirmed_password' => 'required|string|same:password',
+        ]);
     }
 }

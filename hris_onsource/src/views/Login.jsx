@@ -1,22 +1,64 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useAuth } from '../context';
 import axiosClient from '../axiosClient';
-
-
-
-
+import 'boxicons'
+import { useGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
 function Login() {
 
   const {setUser, setToken} =  useAuth();
   const email = useRef();
   const password = useRef();
 
+
+  const loginWithGoogle =  useGoogleLogin({
+        onSuccess: tokenResponse => {
+                axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+        headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`
+        }
+        })
+        .then(userInfoResponse => {
+            onGoogleSubmit(userInfoResponse.data)
+        })
+        .catch(error => {
+          console.error('Error fetching user data from Google:', error);
+        });
+        },
+  });
+
+  const onGoogleSubmit = (data) => {
+    
+    const payload = {
+        name: data.name,
+        email: data.email,
+        image: data.picture,
+        provider: 'GOOGLE',
+    }
+ 
+    axiosClient.post("/register", payload)
+   .then(({data}) => {
+       setUser(data.user);
+       setToken(data.token);
+      })
+   .catch((err) => {
+       const {response} = err;
+       if(response &&  response.status  === 422){
+           Object.keys(response.data.errors).map((err)=>{
+            console.log(err);
+           })
+       }
+    });
+  }
+
+  
   const login = (ev) => {
     ev.preventDefault();
 
     const payload = {
       email: email.current.value,
       password: password.current.value,
+      provider: 'LOCAL',
     }
 
     axiosClient.post('/login', payload)
@@ -31,6 +73,9 @@ function Login() {
         }
     })
   }
+
+
+  
 
   return (
     <>
@@ -76,7 +121,9 @@ function Login() {
                 data-ripple-light="true"
             >
                 Login
-            </button>
+            </button> 
+           
+           
             <p className="mt-4 block text-center font-sans text-base font-normal leading-relaxed text-gray-700 antialiased">
                 Don't have an account?
                 <a
@@ -87,6 +134,17 @@ function Login() {
                 </a>
             </p>
             </form>
+
+            <div className='w-full  justify-center '>
+         
+
+            <button type='submit' className="btn btn-active btn-info my-2 w-full text-white" onClick={() => loginWithGoogle()}><box-icon color="white" size="sm"  type='logo' name='google'></box-icon> Login with Google</button>
+           
+            </div>
+
+            
+
+            
         
         </div>
         </div>
