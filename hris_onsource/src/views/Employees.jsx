@@ -32,19 +32,17 @@ function Employees() {
 
 
    const handleSaveImage = () => {
-      console.log(payload.image_url);
-      // axiosClient.post('/upload', { image: payload.image_url})
-      // .then(response => {      
-         
-      //    setPayload({...payload, image: response.data});
-      //   console.log("data:image/png;base64,"+response.data);
-
-      //   // Handle success
-      // })
-      // .catch(error => {
-      //   console.error('Error:', error);
-      //   // Handle error
-      // });
+   
+      axiosClient.post('/upload', { image: payload.image_url})
+      .then(response => {    
+         console.log(response.data)
+         setPayload({...payload, image: response.data});
+      
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Handle error
+      });
    }
 
    
@@ -161,15 +159,15 @@ function Employees() {
             <form  method="dialog">
             <div className="avatar mt-5 w-full flex-col flex justify-center items-center gap-3">
                <div className="w-24 rounded-full ring ring-[#00b894] ring-offset-base-100 ring-offset-2">
-                  <img  src={payload.image ? URL.createObjectURL(payload?.image) || `data:image/png;base64,${payload?.image}` : "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
-            
+                  {/* <img  src={payload.image ? payload?.image  : "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} /> */}
+                  <img  src={payload?.image} />
          
                </div>
                <input type="file" className="file-input file-input-bordered w-full mt-2" onChange={(e)=>{
                     const file = e.target.files[0]; 
                      const reader = new FileReader();
                      reader.onload = () => {
-                        setPayload({...payload, image:e.target.files[0], image_url: e.target.files})
+                        setPayload({...payload, image:e.target.files[0], image_url: reader.result})
                      };
                      reader.readAsDataURL(file);
                }} />
