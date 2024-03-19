@@ -55,16 +55,16 @@ function DefaultLayout() {
 
               <div className="mt-2 text-center flex justify-center items-center flex-col">
                  {user.image ? (
-                    <div class="avatar">
-                    <div class="w-24 rounded-full">
+                    <div className="avatar">
+                    <div className="w-24 rounded-full">
                       <img src={user &&user.image} />
                     </div>
                   </div>
                  ): (
 
-                  <div class="avatar placeholder">
-                    <div class=" bg-[#00b894] rounded-full w-24 from-[#00b894] to-[#00b894] text-white shadow-[#00b894]/20 shadow-lg">
-                        <span class="text-3xl">{user.name && user.name.split("")[0]}</span>
+                  <div className="avatar placeholder">
+                    <div className=" bg-[#00b894] rounded-full w-24 from-[#00b894] to-[#00b894] text-white shadow-[#00b894]/20 shadow-lg">
+                        <span className="text-3xl">{user.name && user.name.split("")[0]}</span>
                     </div>
                     </div> 
                  )}

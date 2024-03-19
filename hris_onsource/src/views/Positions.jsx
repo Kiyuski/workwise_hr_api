@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect,useState } from 'react';
 import axiosClient from '../axiosClient';
+import moment from 'moment';
+
 
 function Positions() {
+
 
    const [_position, _setPosition] = useState("");
    const [positions, setDataPosition] = useState([]);
    const [id, setPositionId] = useState("");
+   const [_defaultPosition, _setDefaultPosition] = useState("")
 
    const submitPosition = (ev) => {
       ev.preventDefault();
@@ -27,13 +31,13 @@ function Positions() {
          return;
       }
 
-     
-
+    
       axiosClient.post('/position',{
          position: _position,
       })
       .then((res)=>{
          alert(res.data.message);
+         _setPosition("");
          document.getElementById('my_modal_5').close()
          getListPosition();
       })
@@ -107,7 +111,9 @@ function Positions() {
                         <div>
                            <span className="text-base font-normal text-gray-500">This is a list of Positions</span>
                         </div>
-                        <div className="flex-shrink-0 flex justify-center items-center gap-3" onClick={()=>document.getElementById('my_modal_5').showModal()}>
+                        <div className="flex-shrink-0 flex justify-center items-center gap-3" onClick={()=>{
+                           document.getElementById('my_modal_5').showModal();
+                        }}>
                         <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -150,7 +156,7 @@ function Positions() {
                                                 {pos.position}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                                Apr 23 ,2021
+                                                {moment(pos.created_at).calendar()}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
                                                    <div onClick={()=> removePosition(pos.position_id)}>
@@ -188,20 +194,22 @@ function Positions() {
             <form onSubmit={submitPosition} method="dialog">
             <label className="form-control w-full ">
             <div className="label">
-                <span className="label-text">Position name:</span>
+                <span className="label-text">Company position:</span>
             </div>
-            <input value={_position} type="text" placeholder="Input position here" className="input input-bordered w-full"  onChange={(e)=> _setPosition(e.target.value)} />
+            <input value={_position} type="text" placeholder="Input position here" className="input input-bordered w-full"  onChange={(e)=> {
+                const positionVal = e.target.value.toUpperCase();
+               _setPosition(positionVal)
+            }} />
             </label>
             <div className="modal-action">
                 <button type='submit' className="btn btn-success text-white w-[30%]"> {id ? 'Submit': 'Create'}</button>
                 <button type='button' className="btn shadow" onClick={() => {
                   setPositionId("")
                   _setPosition("")
-                  console.log('hello');
                   document.getElementById('my_modal_5').close();
                 
                 }}>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             </form>

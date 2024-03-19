@@ -23,7 +23,7 @@ class StorePositionRequest extends FormRequest
     {
         return [
             //
-            'position' => 'string|regex:/^[a-zA-Z]+$/u|unique:positions,position'
+            'position' => 'string|unique:positions,position'
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\GithubAuthController;
+use App\Http\Controllers\ImageController;
 
 
 
@@ -17,9 +18,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
-
+    
 });
 
+Route::post('/upload', [ImageController::class, 'upload']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/oauth/github/token', [GithubAuthController::class, 'exchangeToken']);
