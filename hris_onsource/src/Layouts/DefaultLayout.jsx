@@ -6,6 +6,7 @@ import { useLocation } from 'react-router-dom'
 import axiosClient from '../axiosClient';
 import "./../App.css"
 import { googleLogout } from '@react-oauth/google';
+import { Link } from 'react-router-dom';
 
 
 function DefaultLayout() {
@@ -32,6 +33,7 @@ function DefaultLayout() {
         setUser(data);
       
     })
+
   },[])
 
 
@@ -80,10 +82,10 @@ function DefaultLayout() {
                 {links.map((link, i) =>{
                   return (
                     <li key={i}>
-                    <a href={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : "text-gray-600"} group`}>
+                    <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : "text-gray-600 group"} `}>
                         {link.icons}
                         <span className="-mr-1 font-medium">{link.name}</span>
-                    </a>
+                    </Link>
                 </li>
                   )
                 })}
@@ -110,7 +112,7 @@ function DefaultLayout() {
               <path d="M13 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V8Z" className="fill-current text-cyan-200 group-hover:text-cyan-300"></path>
               <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
       </svg>
-                  <h5 hidden className="text-2xl text-gray-600 font-medium lg:block capitalize">{pathname.split("/")[1]}</h5>
+                  <h5 hidden className="text-2xl text-gray-600 font-medium lg:block capitalize">{pathname.split("/").slice(1, pathname.split("/").length).length > 1 ? `${pathname.split("/")[1]} / ${pathname.split("/")[2]}`: pathname.split("/")[1] }</h5>
                 </div>
                   <button className="w-12 h-16 -mr-2 border-r lg:hidden">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 my-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">

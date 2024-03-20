@@ -10,6 +10,7 @@ import Department from "./views/Department";
 import Employees from "./views/Employees";
 import History from "./views/History";
 import Reports from "./views/Reports";
+import AddExcel from "./views/AddExcel";
 
 const router = createBrowserRouter([
       {
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
           { path: "/positions", element: <Positions /> },
           { path: "/department", element: <Department />},
           { path: "/employees", element: <Employees />},
+          { path: "/employees/add-excel", element: <AddExcel />},
           { path: "/history", element: <History />},
           { path: "/reports", element: <Reports />},
         ]

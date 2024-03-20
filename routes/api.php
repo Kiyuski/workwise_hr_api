@@ -7,6 +7,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\GithubAuthController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\EmployeeController;
 
 
 
@@ -18,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
+    Route::apiResource('employee', EmployeeController::class);
     
 });
 
