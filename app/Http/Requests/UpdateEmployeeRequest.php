@@ -11,7 +11,7 @@ class UpdateEmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,20 @@ class UpdateEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'employee_id' => 'string',
+            'employee_name' => 'string|max:255',
+            'employee_email' => 'string|max:255|email',
+            'employee_phone' => 'numeric',
+            'employee_address' => 'string|max:255',
+            'employee_gender' => 'string|max:255',
+            'employee_role' => 'max:255|string',
+            'employee_image' => 'string|nullable',
+            'employee_status' => 'string',
+            'department_id' => 'numeric',
+            'position_id' => 'numeric',
+            'employee_start_date' => 'string|nullable',
+            'employee_reason_for_leaving' => 'string|nullable',
+            'employee_end_date' => 'string|nullable',
         ];
     }
 }

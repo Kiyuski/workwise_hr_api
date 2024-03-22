@@ -7,6 +7,7 @@ use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Http\Request;
+use App\Http\Resources\EmployeeResource;
 
 
 class EmployeeController extends Controller
@@ -14,80 +15,91 @@ class EmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Employee $employee)
+    public function index()
     {
-        return $emp_id = IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']);
+        return EmployeeResource::collection(Employee::orderBy('created_at', 'desc')->get());
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreEmployeeRequest $request)
     {
         //
-        $empArray = $request->_employeeData;
-        foreach ($empArray as $data) {
 
-            return $data['employee_email'];
-            Employee::create([
-                'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
-                'employee_name' => $data['employee_name'],
-                'employee_email' => $data['employee_email'],
-                'employee_phone' => $data['employee_phone'],
-                'employee_address' => $data['employee_address'],
-                'employee_gender' => $data['employee_gender'],
-                'employee_role' => $data['employee_role'],
-                'employee_status' => $data['employee_status'],
-                'department_id' => $data['department_id'],
-                'position_id' => $data['position_id'],
-            ]);
+        $datas = $request->validated();
+        if($request->has('_employeeData')){
+
+            foreach ($datas["_employeeData"] as $data) {
+                
+                Employee::create([
+                    'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
+                    "employee_id" => $data["employee_id"],
+                    'employee_name' => $data['employee_name'],
+                    'employee_email' => $data['employee_email'],
+                    'employee_phone' => $data['employee_contact'],
+                    'employee_address' => $data['employee_address'],
+                    'employee_gender' => $data['employee_gender'],
+                    'employee_role' => $data['employee_role'],
+                    'employee_status' => $data['employee_status'],
+                    'department_id' => $data['department_id'],
+                    'position_id' => $data['position_id'],
+                    'employee_start_date' => $data['employee_start_date'],
+                    'employee_end_date' => $data['employee_end_date']
+                ]);
+            }
+
+            return response()->json([
+                "message" => "Product request is successfully send!"
+            ], 200);
         }
 
-        return response()->json([
-            "message" => "Product request is successfully send!"
-        ], 200);
-        // $base64Image = $data['employee_image'];
-        // $image = $base64Image;
-        // if (strpos($base64Image, 'data:image/') === 0) {
-        //     $imageInfo = explode(";base64,", $base64Image);
-        //     $imgExt = str_replace('data:image/', '', $imageInfo[0]);
-        //     $image = $imageInfo[1]; // Use $imageInfo[1] to get the base64 image data
-        //     $name = \Str::random(40) . '.' . $imgExt; 
+ 
+        $base64Image = $datas['employee_image'];
+        $image = $base64Image;
+        if (strpos($base64Image, 'data:image/') === 0) {
+            $imageInfo = explode(";base64,", $base64Image);
+            $imgExt = str_replace('data:image/', '', $imageInfo[0]);
+            $image = $imageInfo[1]; // Use $imageInfo[1] to get the base64 image data
+            $name = \Str::random(40) . '.' . $imgExt; 
           
-        //     $dir = 'image/';
-        //     $absolutePath = public_path($dir);
-        //     $relativePath = $dir . $name;
-        //     if(!\File::exists($absolutePath)){
-        //         \File::makeDirectory($absolutePath, 0755, true); 
-        //     }
+            $dir = 'image/';
+            $absolutePath = public_path($dir);
+            $relativePath = $dir . $name;
 
-        //     \file_put_contents($relativePath, base64_decode($image));
+     
+            if(!\File::exists($absolutePath)){
+                \File::makeDirectory($absolutePath, 0755, true); 
+            }
 
-        //     Employee::create([
-        //         'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
-        //         'employee_name' => $data['employee_name'],
-        //         'employee_email' => $data['employee_email'],
-        //         'employee_phone' => $data['employee_phone'],
-        //         'employee_address' => $data['employee_address'],
-        //         'employee_gender' => $data['employee_gender'],
-        //         'employee_role' => $data['employee_role'],
-        //         'employee_image' => $relativePath,
-        //         'employee_status' => $data['employee_status'],
-        //         'department_id' => $data['department_id'],
-        //         'position_id' => $data['position_id'],
-        //     ]);
+            \file_put_contents($relativePath, base64_decode($image));
 
-        //     return response()->json([
-        //     'message' => 'Employee is created successfully',
-        //         'error' => $data
-        //     ], 200);
+            Employee::create([
+                'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
+                'employee_id' => $datas['employee_id'],
+                'employee_name' => $datas['employee_name'],
+                'employee_email' => $datas['employee_email'],
+                'employee_phone' => $datas['employee_phone'],
+                'employee_address' => $datas['employee_address'],
+                'employee_gender' => $datas['employee_gender'],
+                'employee_role' => $datas['employee_role'],
+                'employee_image' => $relativePath,
+                'employee_status' => $datas['employee_status'],
+                'department_id' => $datas['department_id'],
+                'position_id' => $datas['position_id'],
+                'employee_start_date' => $datas['employee_start_date'],
+                'employee_end_date' => $datas['employee_end_date']
+            ]);
 
-        //     return "Employee is created successfully"; 
+            return response()->json([
+            'message' => 'Employee is created successfully',
+            ], 200);
 
+            // return "Employee is created successfully"; 
             // File::delete(public_path("/"));
-        // } else {
-        //     return null;
-        // }
+        } else {
+            return null;
+        }
 
 
     }
@@ -95,17 +107,80 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Employee $employee)
+    public function show(string $id)
     {
-        //
+        return new EmployeeResource(Employee::find($id));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEmployeeRequest $request, Employee $employee)
+    public function update(UpdateEmployeeRequest $request, string $id)
     {
         //
+       
+        $data = $request->validated();
+    
+        $employee = Employee::find($id);
+
+        if (!$employee) {
+            return response()->json([
+                'message' => 'Employee not found',
+            ], 404);
+        }
+
+        
+         $base64Image = $data['employee_image'] ?? null;
+         $image = $base64Image;
+         
+        if (strpos($base64Image, 'data:image/') === 0) {
+        
+            if (isset($employee['employee_image']) && is_string($employee['employee_image']) && \File::exists(public_path($employee['employee_image']))) {
+                \File::delete(public_path($employee['employee_image']));
+            }
+            
+           
+            $imageInfo = explode(";base64,", $base64Image);
+            $imgExt = str_replace('data:image/', '', $imageInfo[0]);
+            $image = $imageInfo[1]; 
+            $name = \Str::random(40) . '.' . $imgExt; 
+          
+            $dir = 'image/';
+            $absolutePath = public_path($dir);
+            $relativePath = $dir . $name;
+            if(!\File::exists($absolutePath)){
+                \File::makeDirectory($absolutePath, 0755, true); 
+            }
+
+            \file_put_contents($relativePath, base64_decode($image));
+
+            $data["employee_image"] = $relativePath;
+           
+            $employee->update($data);
+
+            return response()->json([
+            'message' => 'Employee is updated successfully',
+            ], 200);
+
+          
+           
+        } else {
+
+          
+            $emp = $employee->update($data);
+
+            return response()->json([
+                'message' => 'Employee updated successfully',
+                'employee' => $emp,
+            ], 200);
+        }
+
+      
+
+        return response()->json([
+            'message' => 'Department updated successfully',
+            'department' => $department,
+        ], 200);
     }
 
     /**
@@ -115,4 +190,6 @@ class EmployeeController extends Controller
     {
         //
     }
+
+    
 }

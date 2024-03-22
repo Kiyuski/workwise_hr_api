@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context';
 import { links } from '../links';
 import { useLocation } from 'react-router-dom'
@@ -13,6 +13,7 @@ function DefaultLayout() {
 
   
   const location = useLocation();
+  const {id} = useParams();
   const { pathname } = location;
   const {setToken, setUser, user} = useAuth();
 
@@ -35,8 +36,6 @@ function DefaultLayout() {
     })
 
   },[])
-
-
 
   const {token} = useAuth();
   if(!token) {
@@ -107,12 +106,26 @@ function DefaultLayout() {
           <div className="sticky z-10 top-0 h-16 border-b bg-white lg:py-2.5">
               <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
                 <div className='flex  justify-center items-center gap-1'>
-                <svg className="-ml-1 h-10 w-10" viewBox="0 0 24 24" fill="none">
+                <svg className="-ml-1 h-5 w-5" viewBox="0 0 24 24" fill="none">
               <path d="M6 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8ZM6 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-1Z" className="fill-current text-cyan-400 dark:fill-slate-600"></path>
               <path d="M13 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V8Z" className="fill-current text-cyan-200 group-hover:text-cyan-300"></path>
               <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
       </svg>
-                  <h5 hidden className="text-2xl text-gray-600 font-medium lg:block capitalize">{pathname.split("/").slice(1, pathname.split("/").length).length > 1 ? `${pathname.split("/")[1]} / ${pathname.split("/")[2]}`: pathname.split("/")[1] }</h5>
+
+                  <div className="text-sm breadcrumbs">
+                        <ul>
+                           {pathname.split("/").slice(1, pathname.split("/").length).map((pt, i)=>{
+                              return (
+                                <li   key={i}>
+                                  <Link  to={pathname.split("/").slice(1, pathname.split("/").length)[0] === pt ? `/${pt}`: `${pathname.split("/").slice(1, pathname.split("/").length)[0]}/${pt}` }>
+                                       <h5  hidden className={`text-sm text-gray-600 font-medium lg:block capitalize ${pt === id ? "cursor-not-allowed" : "cursor-pointer"}`} >{pt}</h5>
+                                  </Link>
+                                </li> 
+                              )
+                           })}
+                        </ul>
+                  </div>
+              
                 </div>
                   <button className="w-12 h-16 -mr-2 border-r lg:hidden">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 my-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">

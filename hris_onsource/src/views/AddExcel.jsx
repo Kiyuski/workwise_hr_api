@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as XLSX from 'xlsx/xlsx.mjs';
 import axiosClient from '../axiosClient';
-
+import moment from 'moment';
+import { Navigate } from 'react-router-dom';
 function AddExcel() {
   const xlRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -31,8 +32,11 @@ function AddExcel() {
 
    axiosClient.post('/employee', {
       _employeeData,
-  }).then((res)=>{
-     console.log(res);
+  }).then(()=>{
+      _setUIemployeeData("");
+      _setemployeeData("");
+      alert("File is added to Database succesfully!");
+      window.location.href = "/employees";
   })
    
   };
@@ -55,6 +59,12 @@ function AddExcel() {
       const [headers, ...rows] = excelData;
       const parsedData = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
       
+      const calcDate = (inputDate) => {
+         const excelStartDate = new Date('1899-12-30');
+         const daysSinceExcelStart = parseInt(inputDate, 10);
+         return moment(new Date(excelStartDate.getTime() + (daysSinceExcelStart * 24 * 60 * 60 * 1000))).format('MM/DD/YYYY') || null;
+      }
+    
       parsedData.map(data => {
          Data.push({
             employee_name: data.Employee,
@@ -63,17 +73,24 @@ function AddExcel() {
             employee_email: data.Email,
             employee_role: data.Role,
             employee_gender: data.Gender,
-            employee_department: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
-            employee_position: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
+            department_id: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
+            position_id: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
             employee_status: "Active",
+            employee_start_date: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
+            employee_end_date: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date)
          })
+
+          
 
          empData.push({
           employee: data.Employee,
+          email: data.Email,
           address: data.Address,
           contact: data.Contact,
           role: data.Role,
           gender: data.Gender,
+          startDate: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
+          endDate:calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date),
           department: data.Department,
           position: data.Position,
           status: "Active",
@@ -149,6 +166,9 @@ function AddExcel() {
                                              EMPLOYEE NAME
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                             EMAIL
+                                          </th>
+                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              ADDRESS
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -162,6 +182,12 @@ function AddExcel() {
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              POSITION
+                                          </th>
+                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                             START-DATE
+                                          </th>
+                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                             END-DATE
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Remarks
@@ -183,6 +209,9 @@ function AddExcel() {
                                                {emp.employee}
                                             </td>
                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
+                                               {emp.email}
+                                            </td>
+                                            <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
                                                {emp.address}
                                             </td>
                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
@@ -196,6 +225,12 @@ function AddExcel() {
                                             </td>
                                             <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
                                                {emp.position}
+                                            </td>
+                                            <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
+                                               {emp.startDate}
+                                            </td>
+                                            <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
+                                               {emp.endDate}
                                             </td>
                                             <td className="p-4 whitespace-nowrap text-sm text-blue-700 font-bold">
                                              {emp.status}

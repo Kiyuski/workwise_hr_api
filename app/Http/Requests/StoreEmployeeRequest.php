@@ -21,18 +21,35 @@ class StoreEmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-            'employee_name' => 'string|max:255|required',
-            'employee_email' => 'string|max:255|required|email|unique:users,email',
-            'employee_phone' => 'numeric|required',
-            'employee_address' => 'string|max:255',
-            'employee_gender' => 'string|max:255',
-            'employee_role' => 'required|max:255|string',
-            // 'employee_image' => 'string',
-            'employee_status' => 'string|required',
-            'department_id' => 'numeric|required',
-            'position_id' => 'numeric|required',
-        ];
+      
+        $rules = [];
+        
+        if($this->has('employee_image')){
+
+            $rules = [
+                'employee_id' => 'string|required',
+                'employee_name' => 'string|max:255|required',
+                'employee_email' => 'string|max:255|required|email|unique:employees,employee_email',
+                'employee_phone' => 'numeric|required',
+                'employee_address' => 'string|max:255|required',
+                'employee_gender' => 'string|max:255|required',
+                'employee_role' => 'required|max:255|string',
+                'employee_image' => 'string|nullable',
+                'employee_status' => 'string|required',
+                'department_id' => 'numeric|required',
+                'position_id' => 'numeric|required',
+                'employee_start_date' => 'string|nullable|required',
+                'employee_end_date' => 'string|nullable',
+            ];
+
+        }else{
+
+            $rules = ['_employeeData' => 'array|required'];
+        };
+
+
+        return $rules;
+
+        
     }
 }
