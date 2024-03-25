@@ -236,11 +236,11 @@ function Employees() {
 
     
       delete payload.employee_image_url
-   
+     
       axiosClient.post('/employee', {...payload, employee_start_date:moment(startDate).format('L'), 
-      employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') ? null : moment(_endDate).format('L')
-      
-      }).then(()=>{
+      employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') ? null : moment(_endDate).format('L'),
+      action:"Employee"
+      }).then((d)=>{
          alert("Employee is created successfully");
          getAllEmployees(department, position);
       })

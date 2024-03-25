@@ -112,7 +112,7 @@ function DefaultLayout() {
               <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
       </svg>
 
-                  <div className="text-sm breadcrumbs">
+                  <div className="text-sm breadcrumbs ">
                         <ul>
                            {pathname.split("/").slice(1, pathname.split("/").length).map((pt, i)=>{
                               return (
