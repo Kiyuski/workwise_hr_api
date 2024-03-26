@@ -29,9 +29,10 @@ function AddExcel() {
   
 
   const handleUploadToDatabase = () => {
-
+  
    axiosClient.post('/employee', {
       _employeeData,
+      action: "Employee"
   }).then(()=>{
       _setUIemployeeData("");
       _setemployeeData("");
@@ -76,6 +77,7 @@ function AddExcel() {
             department_id: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
             position_id: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
             employee_status: "Active",
+            employee_id: data.Employee_id,
             employee_start_date: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
             employee_end_date: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date)
          })

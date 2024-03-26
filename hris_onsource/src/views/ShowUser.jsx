@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print';
 import DatePicker from "react-datepicker";
-import { useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import axiosClient from '../axiosClient';
 import moment from 'moment';
 import { Portal } from "react-overlays";
@@ -13,11 +13,15 @@ const CalendarContainer = ({ children }) => {
   return <Portal container={el}>{children}</Portal>;
 };
 
+
 function ShowUser() {
+  const refPos = useRef(null);
   const {id} =  useParams();
   const [startDate, setStartDate] = useState(new Date());
   const [empData, setEmpData] = useState({
-    employee_position: "",
+    employee_id: id,
+    employee_position: [],
+    position_id:'',
     employee_start_date: "",
     employee_email: "",
     employee_end_date: "",
@@ -168,7 +172,6 @@ function ShowUser() {
         if(empData.employee_dependent.length === 1){
           return;
         }
-  
         removeData = {
           ...empData,
            employee_dependent: [
@@ -214,19 +217,32 @@ function ShowUser() {
 
 
   useEffect(()=>{
+ 
     Promise.all([getDataList('position'), getDataList('department')])
       .then((dt) => {
-
+       
         axiosClient.get(`/employee/${id}`)
         .then(({data : {data}})=>{
-         
-          setEmpData({...empData, 
+          
+
+      
+      
+          setEmpData({...empData,
+            data,
             employee_name: data.employee_name,
             employee_start_date: data.employee_start_date,
             employee_email: data.employee_email,
-            employee_address: data.employee_address,
-            employee_position: dt[0].data.find(d => d.position_id === data.position_id).position,        
+            employee_address: data.employee_address, 
+            employee_position: dt[0].data,  
+            employee_dependent: data.employee_dependents,
+            employee_educational_background: data.employee_educational_background,
+            employee_history: data.employee_employment_history,
+            employee_reference: data.employee_character_reference,
+            employee_case_emergency: data.employee_person_to_notify, 
+            position_id:data.position_id,   
           })
+          
+          refPos.current.value = data.position_id;
           setStartDate(data.employee_start_date);
         })
         .catch((e)=>{
@@ -238,6 +254,8 @@ function ShowUser() {
           console.error(err);
       });
  },[])
+
+ 
 
  const getDataList = async (path) => {
   try {
@@ -253,7 +271,39 @@ function ShowUser() {
 
 
  const handleSubmitData = () => {
-  console.log(empData);
+   
+
+  const params = {
+    ...empData,
+    employee_educational_background: JSON.stringify(empData.employee_educational_background),
+    employee_dependents: JSON.stringify(empData.employee_dependent.filter(de => de.name || de.relationship || de.age)),
+    employee_employment_history: JSON.stringify(empData.employee_history.filter(de => de.company || de.position || de.salary || de.length_of_service || de.reason_for_leaving)),
+    employee_character_reference: JSON.stringify(empData.employee_reference.filter(de => de.name || de.occupation || de.address || de.contact)),
+    employee_person_to_notify: JSON.stringify(empData.employee_case_emergency),
+    action: 'Employee_update_data'
+   };
+
+   const config = {
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    };
+
+    
+    const queryString = new URLSearchParams(params).toString();
+  
+    axiosClient.put(`/employee/${id}`, queryString, config)
+    .then((d)=>{
+        alert("Employee is updated successfully");
+
+    })
+    .catch((err)=>{
+        const {response} = err;
+        if(response &&  response.status  === 422){
+        console.log(response.data)
+        }
+    })
+    return;
  }
 
 
@@ -269,7 +319,14 @@ function ShowUser() {
               <div className="label">
                 <span className="label-text">Position:</span>
               </div>
-              <input type="text" value={empData.employee_position} placeholder="i.g position" className="input input-bordered w-full" onChange={(e)=> setEmpData({...empData, employee_position: e.target.value})} />   
+              <label className="form-control w-full">
+               <select ref={refPos} className="select select-bordered" onChange={(e)=> setEmpData({...empData, position_id: e.target.value})}>
+                  <option disabled defaultValue>Select here</option>
+                  {empData.employee_position &&  empData.employee_position.map((pos)=>{
+                     return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option>
+                  })}
+               </select>
+            </label>  
           </label>
           <label className="form-control w-full ">
               <div className="label">
@@ -457,17 +514,18 @@ function ShowUser() {
               <th>Relationship</th>
               <th>Age</th>
               <th>Date of Birth</th>
-              <th>
-              <div onClick={()=> addMoreData("Dependents")} className='border flex w-12 justify-center items-center p-1 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
+              <th className='flex gap-2 justify-center'>
+              <div onClick={()=> addMoreData("Dependents")} className=' flex w-12 justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"  />
                   </svg>
                 </div>
+                
               </th>
             </tr>
           </thead>
           <tbody>
-            {empData && empData.employee_dependent.map((de, i) => {
+            {empData.employee_dependent && empData.employee_dependent.map((de, i) => {
               return (
                 <tr key={i}>
                 <td><input type="text" value={de.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
@@ -486,7 +544,7 @@ function ShowUser() {
                   setEmpData({...empData, employee_dependent: updateData});
                 }} /></td>
                 <td>
-                  <DatePicker  value={de.date_of_birth} className="  input input-bordered flex items-center gap-2 w-full " selected={de.date_of_birth}  onChange={(date)=> {
+                  <DatePicker  value={moment(de.date_of_birth).format('L') || new Date()} className="  input input-bordered flex items-center gap-2 w-full " selected={de.date_of_birth}  onChange={(date)=> {
                   const updateData = [...empData.employee_dependent];
                   updateData[i].date_of_birth = date;
                   setEmpData({...empData, employee_dependent: updateData});
@@ -495,19 +553,16 @@ function ShowUser() {
                
                 />
                 </td>
-                <th>
-                <div onClick={()=> removeData("Dependents", i)}  className={`${ empData.employee_dependent.length > 1 ? "cursor-pointer hover:opacity-100" : "cursor-not-allowed "} border flex w-12 justify-center items-center p-1 rounded-md bg-red-700 text-white transition-all opacity-70 `}>
+                <td className='flex justify-center'>
+                <div onClick={()=> removeData("Dependents", i)}  className={`${ empData.employee_dependent.length > 1 ? "cursor-pointer hover:opacity-100" : "cursor-not-allowed "} border flex w-12 justify-center items-center p-2 rounded-md bg-red-700 text-white transition-all opacity-70 `}>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
                   </div>
-                </th>
+                </td>
               </tr>
-             
               )
-            })}
-           
-           
+            })}       
           </tbody>
         </table>
 
@@ -531,7 +586,7 @@ function ShowUser() {
             </tr>
           </thead>
           <tbody>
-            {empData.employee_educational_background.map((ed , i)=>{
+            {empData.employee_educational_background && empData.employee_educational_background.map((ed , i)=>{
               return (
                 <tr key={i}>
                 <td>
@@ -576,12 +631,13 @@ function ShowUser() {
               <th>Salary</th>
               <th>Length of Service</th>
               <th>Reason for Leaving</th>
-              <th>
-                <div onClick={()=> addMoreData("Educational_history")} className='border w-12 flex justify-center items-center p-1 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
+              <th className='flex justify-center items-center gap-2'>
+                <div onClick={()=> addMoreData("Educational_history")} className='border w-12 flex justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"  />
                   </svg>
                 </div>
+              
               </th>
             </tr>
           </thead>
@@ -615,8 +671,8 @@ function ShowUser() {
                   updatePayloadEd[i].reason_for_leaving = e.target.value;
                   setEmpData({...empData, employee_history: updatePayloadEd});
                 }}/></td>
-                  <td>
-                    <div onClick={()=> removeData("Educational_history", i)} className={`border flex justify-center w-12 items-center p-1 rounded-md bg-red-700 text-white transition-all opacity-70 ${ empData.employee_history.length > 1 ? "cursor-pointer hover:opacity-100" : "cursor-not-allowed "}`}>
+                  <td className='flex justify-center'>
+                    <div onClick={()=> removeData("Educational_history", i)} className={`border flex justify-center w-12 items-center p-2 rounded-md bg-red-700 text-white transition-all opacity-70 ${ empData.employee_history.length > 1 ? "cursor-pointer hover:opacity-100" : "cursor-not-allowed "}`}>
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                       </svg>
@@ -640,12 +696,13 @@ function ShowUser() {
               <th>Occupation</th>
               <th>Address</th>
               <th>Contact #</th>
-              <th>
-                <div onClick={()=> addMoreData("Reference")} className=' w-12 border flex justify-center items-center p-1 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
+              <th className='flex justify-center items-center gap-2'>
+                <div onClick={()=> addMoreData("Reference")} className=' w-12 border flex justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"  />
                   </svg>
                 </div>
+                
               </th>
             </tr>
           </thead>
@@ -674,12 +731,13 @@ function ShowUser() {
                       updatePayloadEd[i].contact = e.target.value;
                       setEmpData({...empData, employee_reference: updatePayloadEd});
                     }} /></td>
-                    <td>
-                      <div onClick={()=> removeData("Reference", i)} className={`w-12 border flex justify-center items-center p-1 rounded-md bg-red-700 text-white transition-all opacity-70 ${empData.employee_reference.length > 1 ? "cursor-pointer hover:opacity-100": "cursor-not-allowed"}`}>
+                    <td className='flex justify-center '>
+                      <div onClick={()=> removeData("Reference", i)} className={`w-12 border flex justify-center items-center p-2 rounded-md bg-red-700 text-white transition-all opacity-70 ${empData.employee_reference.length > 1 ? "cursor-pointer hover:opacity-100": "cursor-not-allowed"}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                       </div>
+                      
                     </td>
                   </tr>
                 )

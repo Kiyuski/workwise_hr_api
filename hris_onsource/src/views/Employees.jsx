@@ -43,31 +43,6 @@ function Employees() {
 
 
 
-   // const handleShowEmp = (id) => {
-   //    axiosClient.get(`/employee/${id}`)
-   //    .then(({data})=>{
-   //       document.getElementById('my_modal_5').showModal();
-   //       setPayload({
-   //          ...payload,
-   //          ...data.data,
-   //       })
-   //       setEmpId(data.data.id);
-   //       setEndDate(data.data.employee_end_date === null ? new Date() : data.data.employee_end_date);
-   //       refRole.current.value = data.data.employee_role;
-   //       refGen.current.value = data.data.employee_gender;
-   //       refDep.current.value = data.data.department_id;
-   //       refPos.current.value = data.data.position_id;
-   //       refStat.current.value = data.data.employee_status || "Select here";
-  
-
-   //    })
-   //    .catch((err)=>{
-   //       const {response} = err;
-   //       if(response &&  response.status  === 422){
-   //         console.log(response.data)
-   //       }
-   //    })
-   // }
 
 
    useEffect(()=>{

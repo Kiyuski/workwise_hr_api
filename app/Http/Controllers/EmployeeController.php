@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\EmployeeResource;
 
 
+
 class EmployeeController extends Controller
 {
     /**
@@ -17,25 +18,18 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        return EmployeeResource::collection(Employee::orderBy('created_at', 'desc')->get());
+        return EmployeeResource::collection(Employee::orderBy('id', 'desc')->get());
     }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreEmployeeRequest $request)
     {
         //
-
+   
         $datas = $request->validated();
-        switch ($datas['action']) {
-            case 'Employee':
-                $this->storeEmployee($request, $datas);
-                break;
-            default:
-            break;
-        }
-        
+        return $this->storeEmployee($request, $datas);
+
     }
 
     /**
@@ -53,6 +47,7 @@ class EmployeeController extends Controller
     {
         //
        
+     
         $data = $request->validated();
     
         $employee = Employee::find($id);
@@ -63,60 +58,77 @@ class EmployeeController extends Controller
             ], 404);
         }
 
-        
-         $base64Image = $data['employee_image'] ?? null;
-         $image = $base64Image;
-         
-        if (strpos($base64Image, 'data:image/') === 0) {
-        
-            if (isset($employee['employee_image']) && is_string($employee['employee_image']) && \File::exists(public_path($employee['employee_image']))) {
-                \File::delete(public_path($employee['employee_image']));
-            }
+        switch ($request->action) {
+            case 'Employee':
+                return $this->updateEmployee($data);
+            break;
+            case 'Employee_update_data':
+                return $this->update_Employee_info($request, $employee);
+            break;
             
-           
-            $imageInfo = explode(";base64,", $base64Image);
-            $imgExt = str_replace('data:image/', '', $imageInfo[0]);
-            $image = $imageInfo[1]; 
-            $name = \Str::random(40) . '.' . $imgExt; 
-          
-            $dir = 'image/';
-            $absolutePath = public_path($dir);
-            $relativePath = $dir . $name;
-            if(!\File::exists($absolutePath)){
-                \File::makeDirectory($absolutePath, 0755, true); 
-            }
-
-            \file_put_contents($relativePath, base64_decode($image));
-
-            $data["employee_image"] = $relativePath;
-           
-            $employee->update($data);
-
-            return response()->json([
-            'message' => 'Employee is updated successfully',
-            ], 200);
-
-          
-           
-        } else {
-
-          
-            $emp = $employee->update($data);
-
-            return response()->json([
-                'message' => 'Employee updated successfully',
-                'employee' => $emp,
-            ], 200);
+            default:
+                return null;
+            break;
         }
 
-      
-
-        return response()->json([
-            'message' => 'Department updated successfully',
-            'department' => $department,
-        ], 200);
+        
+ 
     }
 
+
+    private function updateEmployee($data){
+        $base64Image = $data['employee_image'] ?? null;
+        $image = $base64Image;
+        
+       if (strpos($base64Image, 'data:image/') === 0) {
+       
+           if (isset($employee['employee_image']) && is_string($employee['employee_image']) && \File::exists(public_path($employee['employee_image']))) {
+               \File::delete(public_path($employee['employee_image']));
+           }
+           
+          
+           $imageInfo = explode(";base64,", $base64Image);
+           $imgExt = str_replace('data:image/', '', $imageInfo[0]);
+           $image = $imageInfo[1]; 
+           $name = \Str::random(40) . '.' . $imgExt; 
+         
+           $dir = 'image/';
+           $absolutePath = public_path($dir);
+           $relativePath = $dir . $name;
+           if(!\File::exists($absolutePath)){
+               \File::makeDirectory($absolutePath, 0755, true); 
+           }
+
+           \file_put_contents($relativePath, base64_decode($image));
+
+           $data["employee_image"] = $relativePath;
+          
+           $employee->update($data);
+
+           return response()->json([
+           'message' => 'Employee is updated successfully',
+           ], 200);
+
+         
+          
+       } else {
+
+         
+           $emp = $employee->update($data);
+
+           return response()->json([
+               'message' => 'Employee updated successfully',
+               'employee' => $emp,
+           ], 200);
+       }
+
+     
+
+       return response()->json([
+           'message' => 'Department updated successfully',
+           'department' => $department,
+       ], 200);
+    }
 
     private function storeEmployee($request, $datas) {
         if($request->has('_employeeData')){
@@ -192,6 +204,17 @@ class EmployeeController extends Controller
         }
     }
 
+    private function update_Employee_info($request, $employee){
+        $employee->update($request->except('action'));
+        return response()->json([
+           'message' => 'Employee updated successfully',
+            'employee' => $employee,
+        ], 200);
+    
+
+    }
+
+   
 
   
 
