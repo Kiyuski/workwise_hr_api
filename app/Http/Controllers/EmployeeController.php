@@ -60,7 +60,7 @@ class EmployeeController extends Controller
 
         switch ($request->action) {
             case 'Employee':
-                return $this->updateEmployee($data);
+                return $this->updateEmployee($data, $employee);
             break;
             case 'Employee_update_data':
                 return $this->update_Employee_info($request, $employee);
@@ -75,8 +75,9 @@ class EmployeeController extends Controller
  
     }
 
-
-    private function updateEmployee($data){
+    
+    
+    private function updateEmployee($data, $employee){
         $base64Image = $data['employee_image'] ?? null;
         $image = $base64Image;
         
@@ -122,12 +123,7 @@ class EmployeeController extends Controller
            ], 200);
        }
 
-     
 
-       return response()->json([
-           'message' => 'Department updated successfully',
-           'department' => $department,
-       ], 200);
     }
 
     private function storeEmployee($request, $datas) {
@@ -205,11 +201,63 @@ class EmployeeController extends Controller
     }
 
     private function update_Employee_info($request, $employee){
-        $employee->update($request->except('action'));
-        return response()->json([
-           'message' => 'Employee updated successfully',
-            'employee' => $employee,
-        ], 200);
+       
+        $base64Image = $request->employee_image ?? null;
+        $image = $base64Image;
+
+        if (strpos($base64Image, 'data:image/') === 0) {
+       
+            if (isset($employee['employee_image']) && is_string($employee['employee_image']) && \File::exists(public_path($employee['employee_image']))) {
+                \File::delete(public_path($employee['employee_image']));
+            }
+            
+           
+            $imageInfo = explode(";base64,", $base64Image);
+            $imgExt = str_replace('data:image/', '', $imageInfo[0]);
+            $image = $imageInfo[1]; 
+            $name = \Str::random(40) . '.' . $imgExt; 
+          
+            $dir = 'image/';
+            $absolutePath = public_path($dir);
+            $relativePath = $dir . $name;
+            if(!\File::exists($absolutePath)){
+                \File::makeDirectory($absolutePath, 0755, true); 
+            }
+         
+      
+            \file_put_contents($relativePath, base64_decode($image));
+        
+            $request['employee_image'] = $relativePath;
+
+            $employee->update($request->except('action', 'data', 'employee_case_emergency', 'employee_dependent', 'employee_history', 'employee_reference'));
+
+            return response()->json([
+               'message' => 'Employee updated successfully',
+                'employee' => $employee,
+            ], 200);
+ 
+          
+           
+        } else {
+ 
+            $emp = $employee->update($request->except(
+                'action', 
+                'data', 
+                'employee_case_emergency', 
+                'employee_dependent', 
+                'employee_history', 
+                'employee_reference',
+                'employee_image'
+            ));
+ 
+            return response()->json([
+                'message' => 'Employee updated successfully',
+                'employee' => $emp,
+            ], 200);
+        }
+ 
+
+      
     
 
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as XLSX from 'xlsx/xlsx.mjs';
 import axiosClient from '../axiosClient';
 import moment from 'moment';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 function AddExcel() {
   const xlRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -37,7 +37,7 @@ function AddExcel() {
       _setUIemployeeData("");
       _setemployeeData("");
       alert("File is added to Database succesfully!");
-      window.location.href = "/employees";
+      Navigate("/employees")
   })
    
   };
@@ -65,8 +65,11 @@ function AddExcel() {
          const daysSinceExcelStart = parseInt(inputDate, 10);
          return moment(new Date(excelStartDate.getTime() + (daysSinceExcelStart * 24 * 60 * 60 * 1000))).format('MM/DD/YYYY') || null;
       }
-    
+      
+
+   
       parsedData.map(data => {
+       
          Data.push({
             employee_name: data.Employee,
             employee_address: data.Address,
@@ -76,7 +79,7 @@ function AddExcel() {
             employee_gender: data.Gender,
             department_id: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
             position_id: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
-            employee_status: "Active",
+            employee_status: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date),
             employee_id: data.Employee_id,
             employee_start_date: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
             employee_end_date: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date)
@@ -95,7 +98,7 @@ function AddExcel() {
           endDate:calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date),
           department: data.Department,
           position: data.Position,
-          status: "Active",
+          status: data.End_date ? "Inactive" : "Active",
        })
 
      });
@@ -234,7 +237,7 @@ function AddExcel() {
                                             <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
                                                {emp.endDate}
                                             </td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-blue-700 font-bold">
+                                            <td className={`p-4 whitespace-nowrap text-sm ${emp.status === "Inactive" ? "text-red-700" : "text-blue-700"}  font-bold`}>
                                              {emp.status}
                                             </td>
                                            
