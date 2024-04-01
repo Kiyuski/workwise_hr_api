@@ -28,6 +28,7 @@ class Employee extends Model
         "employee_end_date",
         "employee_sss",
         "employee_philhealth",
+        "employee_pag_ibig",
         "employee_tin",
         "employee_provincial_address",
         "employee_birthdate",

@@ -12,6 +12,9 @@ import History from "./views/History";
 import Reports from "./views/Reports";
 import AddExcel from "./views/AddExcel";
 import ShowUser from "./views/ShowUser";
+import UserDetails from "./views/UserDetails";
+
+
 
 const router = createBrowserRouter([
       {
@@ -24,8 +27,9 @@ const router = createBrowserRouter([
           { path: "/department", element: <Department />},
           { path: "/employees", element: <Employees />},
           { path: "/employees/add-excel", element: <AddExcel />},
-          { path: "/employees/:id", element: <ShowUser />},
           { path: "/history", element: <History />},
+          { path: "/employees/:id/update", element: <ShowUser />},
+          { path: "/employees/:id/details", element: <UserDetails />},
           { path: "/reports", element: <Reports />},
         ]
         

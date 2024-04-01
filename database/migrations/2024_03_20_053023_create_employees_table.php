@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string("employee_sss")->nullable();
             $table->string("employee_philhealth")->nullable();
             $table->string("employee_tin")->nullable();
+            $table->string("employee_pag_ibig")->nullable();
             $table->string("employee_provincial_address")->nullable();
             $table->string("employee_birthdate")->nullable();
             $table->string("employee_date_birth")->nullable();

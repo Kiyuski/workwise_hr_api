@@ -17,6 +17,7 @@ class PositionResource extends JsonResource
         return [
             "position_id" => $this->id,
             "position" => $this->position,
+            "created_at" => $this->created_at
         ];
     }
 }

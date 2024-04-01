@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useReactToPrint } from 'react-to-print';
 import DatePicker from "react-datepicker";
 import { useParams, useNavigate    } from 'react-router-dom'
 import axiosClient from '../axiosClient';
@@ -9,17 +8,12 @@ import { Portal } from "react-overlays";
 
 const CalendarContainer = ({ children }) => {
   const el = document.getElementById("calendar-portal");
-
   return <Portal container={el}>{children}</Portal>;
 };
 
 
 function ShowUser() {
-  const refPos = useRef(null);
-  const refName = useRef(null);
-  const refAddress = useRef(null);
-  const refRelationship = useRef(null);
-  const refContactNumber = useRef(null);
+
   const navigate = useNavigate();
   
 
@@ -33,6 +27,7 @@ function ShowUser() {
     employee_start_date: "",
     employee_email: "",
     employee_end_date: "",
+    employee_pag_ibig: "",
     employee_sss: "",
     employee_philhealth: "",
     employee_name: "",
@@ -108,14 +103,7 @@ function ShowUser() {
   });
 
 
- 
-  const contentToPrint = useRef(null);
-  const handlePrint = useReactToPrint({
-    documentTitle: "Print This Document",
-    onBeforePrint: () => console.log("before printing..."),
-    onAfterPrint: () => console.log("after printing..."),
-    removeAfterPrint: true,
-  });
+
 
   const addMoreData = (choose) => {
     var data;
@@ -223,36 +211,48 @@ function ShowUser() {
    
     setEmpData(removeData)
   }
-
+ 
 
   useEffect(()=>{
    setloader(true);
     Promise.all([getDataList('position'), getDataList('department')])
       .then((dt) => {
-       
+    
         axiosClient.get(`/employee/${id}`)
         .then(({data : {data}})=>{
           setloader(false);
+   
           setEmpData({...empData,
-            data,
+            employee_provincial_address: data.employee_provincial_address ,
+            employee_birthdate: data.employee_birthdate,
+            employee_date_birth: data.employee_date_birth,
+            employee_birth_place: data.employee_birth_place,
+            employee_civil_status: data.employee_civil_status,
+            employee_spouse: data.employee_spouse  ,
+            employee_name_of_spouse:  data.employee_name_of_spouse,
+            employee_company: data.employee_company ,
+            employee_father: data.employee_father ,
+            employee_mother: data.employee_mother ,
+            employee_pag_ibig: data.employee_pag_ibig,
+            employee_sss: data.employee_sss,
+            employee_philhealth: data.employee_philhealth,
+            employee_tin: data.employee_tin,
+            employee_address:data.employee_address,
+            employee_position:dt[0].data,
             employee_name: data?.employee_name,
             employee_start_date: data?.employee_start_date,
             employee_email: data?.employee_email,
-            employee_address: data?.employee_address, 
-            employee_position: dt[0]?.data,  
-            employee_dependent: data?.employee_dependents || [],
-            employee_educational_background: data?.employee_educational_background || [],
-            employee_history: data?.employee_employment_history || [],
-            employee_reference: data?.employee_character_reference || [],
+            employee_dependent: !data.employee_dependents.length ? empData.employee_dependent : data.employee_dependents,
+            employee_educational_background: !data.employee_educational_background.length ? empData.employee_educational_background : data?.employee_educational_background,
+            employee_history: !data.employee_employment_history.length ? empData.employee_history : data?.employee_employment_history ,
+            employee_reference: !data.employee_character_reference.length ? empData.employee_reference : data?.employee_character_reference,
             employee_image: data?.employee_image, 
             position_id:data?.position_id,   
+            employee_person_to_notify: empData.employee_position || data?.employee_person_to_notify,
           })
           
-          refPos.current.value = data.position_id ;
-          refName.current.value = !data.employee_person_to_notify ? null : data.employee_person_to_notify.name;
-          refAddress.current.value = !data.employee_person_to_notify ? null : data.employee_person_to_notify.address;
-          refRelationship.current.value = !data.employee_person_to_notify ? null : data.employee_person_to_notify.relationship;
-          refContactNumber.current.value = !data.employee_person_to_notify ? null : data.employee_person_to_notify.contact;
+          
+         
           setStartDate(data.employee_start_date);
         })
         .catch((e)=>{
@@ -265,7 +265,6 @@ function ShowUser() {
       });
  },[])
 
- 
 
   const getDataList = async (path) => {
     try {
@@ -282,7 +281,6 @@ function ShowUser() {
 
   const handleSubmitData = () => {
     
-
     if(empData.employee_image_url){
       empData.employee_image = empData.employee_image_url;
       delete empData.employee_image_url;
@@ -314,7 +312,8 @@ function ShowUser() {
       
       const queryString = new URLSearchParams(params).toString();
       axiosClient.put(`/employee/${id}`, queryString, config)
-      .then(()=>{
+      .then((d)=>{
+      
           alert("Employee is updated successfully");
           navigate("/employees");
       })
@@ -352,7 +351,6 @@ function ShowUser() {
                const reader = new FileReader();
                reader.onload = () => {
                   setEmpData({...empData, employee_image:e.target.files[0], employee_image_url: reader.result})
-                 
                };
                reader.readAsDataURL(file);
          }} />
@@ -364,9 +362,9 @@ function ShowUser() {
           <span className="label-text">Position:</span>
         </div>
         <label className="form-control w-full">
-         <select ref={refPos} className="select select-bordered" onChange={(e)=> setEmpData({...empData, position_id: e.target.value})}>
+         <select value={empData.position_id} className="select select-bordered" onChange={(e)=> setEmpData({...empData, position_id: e.target.value})}>
             <option disabled defaultValue>Select here</option>
-            {empData.employee_position &&  empData.employee_position.map((pos)=>{
+            {empData.employee_position.map((pos)=>{
                return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option>
             })}
          </select>
@@ -396,7 +394,7 @@ function ShowUser() {
 
   </div>
 
-  <div className='flex gap-5'>
+   <div className='flex gap-5'>
   <label className="form-control w-full mt-2">
       <div className="label">
         <span className="label-text">PhilHealth #:</span>
@@ -410,7 +408,14 @@ function ShowUser() {
       </div>
       <input type="number" value={empData.employee_tin} placeholder="i.g tin" className="input input-bordered w-full " onChange={(e)=> setEmpData({...empData, employee_tin: e.target.value})} />   
   </label>
-  </div>
+  <label className="form-control w-full mt-2">
+      <div className="label">
+        <span className="label-text">Pag-ibig #:</span>
+      </div>
+      <input type="number" value={empData.employee_pag_ibig } placeholder="i.g pag-ibig" className="input input-bordered w-full " onChange={(e)=> setEmpData({...empData, employee_pag_ibig: e.target.value})} />   
+  </label>
+  </div> 
+
 
   <h2 className="card-title mt-7">I. PERSONAL INFORMATION</h2>
 
@@ -569,7 +574,7 @@ function ShowUser() {
       </tr>
     </thead>
     <tbody>
-      {empData.employee_dependent && empData.employee_dependent.map((de, i) => {
+      {empData.employee_dependent.length &&  empData.employee_dependent.map((de, i) => {
         return (
           <tr key={i}>
           <td><input type="text" value={de.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
@@ -686,7 +691,7 @@ function ShowUser() {
       </tr>
     </thead>
     <tbody>
-      {empData && empData.employee_history.map((eh, i)=>{
+      {empData.employee_history.map((eh, i)=>{
         return (
           <tr key={i}>
           
@@ -751,8 +756,7 @@ function ShowUser() {
       </tr>
     </thead>
     <tbody>
-      {empData.employee_reference && 
-        empData.employee_reference.map((er, i)=>{
+      {empData.employee_reference.map((er, i)=>{
           return (
             <tr key={i}>
               <td><input type="text" value={er.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
@@ -812,7 +816,7 @@ function ShowUser() {
 
       <tr>
         <td className="w-[10%]">Name:</td>
-        <td><input ref={refName} type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td><input type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {
@@ -822,7 +826,7 @@ function ShowUser() {
           })
         }} /></td>
         <td className="w-[10%]">Relationship:</td>
-        <td><input type="text" ref={refRelationship}   placeholder="Type here" className="input-md input w-full " onChange={(e)=> {
+        <td><input type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=> {
           setEmpData({
             ...empData,
             employee_case_emergency:{
@@ -835,7 +839,7 @@ function ShowUser() {
 
       <tr>
         <td className="w-[10%]">Address:</td>
-        <td><input ref={refAddress} type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td><input  type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {
@@ -845,7 +849,7 @@ function ShowUser() {
           })
         }}/></td>
         <td className="w-[10%]">Contact Number:</td>
-        <td><input ref={refContactNumber} type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td><input  type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {

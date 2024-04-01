@@ -79,7 +79,7 @@ function AddExcel() {
             employee_gender: data.Gender,
             department_id: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
             position_id: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
-            employee_status: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date),
+            employee_status: calcDate(data.End_date) === "Invalid date" ? "Active" : "Inactive",
             employee_id: data.Employee_id,
             employee_start_date: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
             employee_end_date: calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date)
@@ -109,7 +109,6 @@ function AddExcel() {
     };
     reader.readAsArrayBuffer(file);
   }; 
-
 
 
     useEffect(()=>{
@@ -200,14 +199,14 @@ function AddExcel() {
                                        </tr>
                                     </thead>
                                     <tbody className="bg-white">
-                                    {!_UIemployeeData.length && (
+                                    {!_UIemployeeData?.length && (
                                         <tr>
                                           <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
                                             No data available.
                                           </td>
                                         </tr>
                                     )}
-                                    {_UIemployeeData.map((emp, i)=>{
+                                    {_UIemployeeData?.map((emp, i)=>{
                                           return (
                                             <tr key={i.toString()}>
                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900 capitalize">

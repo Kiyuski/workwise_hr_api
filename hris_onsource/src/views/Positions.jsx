@@ -145,7 +145,9 @@ function Positions() {
                                        {!positions.data?.length && (
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-                                                No data available.
+                                                <div className='ml-5'>
+                                                   <span className="loading loading-ring loading-lg text-primary"></span>
+                                                </div>
                                              </td>
                                           </tr>
                                        )}

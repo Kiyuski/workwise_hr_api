@@ -44,7 +44,7 @@ function DefaultLayout() {
 
   return (
     <div className="App ">
-       <aside className="ml-[-100%] fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r bg-white transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[15%]">
+       <aside className="ml-[-100%] fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r  transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[15%]">
           <div>
               <div className="-mx-6 px-6 py-4 text-center">
                   <a href="#" title="home">
@@ -102,8 +102,8 @@ function DefaultLayout() {
           </div>
       </aside>
 
-      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] bg-white">
-          <div className="sticky z-10 top-0 h-16 border-b bg-white lg:py-2.5">
+      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] ">
+          <div className="sticky z-10 top-0 h-16 border-b  lg:py-2.5">
               <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
                 <div className='flex  justify-center items-center gap-1'>
                 <svg className="-ml-1 h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -132,8 +132,8 @@ function DefaultLayout() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                   </button>
-                  <div className="flex space-x-4">
-                     
+                
+                  <div className="flex space-x-4">       
                       <div hidden className="md:block">
                           <div className="relative flex items-center text-gray-400 focus-within:text-[#00b894]">
                               <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
@@ -160,6 +160,10 @@ function DefaultLayout() {
                               <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                           </svg>
                       </button>
+                      <button aria-label="notification" className="mt-2">
+                           <input type="checkbox" value="synthwave" className="toggle theme-controller"/>
+                      </button>
+                    
                   </div>
               </div>
           </div>

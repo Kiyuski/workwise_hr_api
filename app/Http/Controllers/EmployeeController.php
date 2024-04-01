@@ -127,6 +127,8 @@ class EmployeeController extends Controller
     }
 
     private function storeEmployee($request, $datas) {
+
+      
         if($request->has('_employeeData')){
 
             foreach ($datas["_employeeData"] as $data) {
@@ -239,7 +241,7 @@ class EmployeeController extends Controller
           
            
         } else {
- 
+           
             $emp = $employee->update($request->except(
                 'action', 
                 'data', 

@@ -130,7 +130,9 @@ function Department() {
                                     {!departments.data?.length && (
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-                                                No data available.
+                                                <div className='ml-5'>
+                                                   <span className="loading loading-ring loading-lg text-primary"></span>
+                                                </div>
                                              </td>
                                           </tr>
                                        )}
@@ -141,7 +143,7 @@ function Department() {
                                                 {de.department}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                               {de.created_at && moment(de.created_at).calendar()}
+                                               { de.created_at && moment(de.created_at).calendar()}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
                                                    <div onClick={()=> deleteDepartment(de.id)}>
