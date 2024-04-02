@@ -250,7 +250,7 @@ function Employees() {
   return (
       <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] z-0">
 
-        <div  className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5 z-0">
+        <div  className=" shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5 z-0">
        
                      <div className="mb-4 flex items-center justify-between">
                 
@@ -290,7 +290,7 @@ function Employees() {
                            <div className="align-middle inline-block min-w-full z-0">
                               <div className="shadow overflow-hidden sm:rounded-lg z-0 relative">
                                  <table className="min-w-full divide-y divide-gray-200 z-0">
-                                    <thead className="bg-gray-50 ">
+                                    <thead className="">
                                        <tr>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              IMAGE
@@ -390,7 +390,7 @@ function Employees() {
                                             
                                           </td>
                                           <td className="pt-6 px-2 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
-                                                <Link to={`/employees/${emp.id}/details`}>
+                                                <Link to={`/employees/${emp.id}`}>
                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-[#00b894] cursor-pointer transition-all opacity-75 hover:opacity-100">
                                                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                                                    </svg>

@@ -16,6 +16,7 @@ import UserDetails from "./views/UserDetails";
 
 
 
+
 const router = createBrowserRouter([
       {
         path: "/",
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
           { path: "/employees/add-excel", element: <AddExcel />},
           { path: "/history", element: <History />},
           { path: "/employees/:id/update", element: <ShowUser />},
-          { path: "/employees/:id/details", element: <UserDetails />},
+          { path: "/employees/:id", element: <UserDetails />},
           { path: "/reports", element: <Reports />},
         ]
         
