@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Outlet, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context';
 import { links } from '../links';
@@ -11,11 +11,30 @@ import { Link } from 'react-router-dom';
 
 function DefaultLayout() {
 
+
+  const [theme, setTheme] = useState(localStorage.getItem("theme") ? localStorage.getItem("theme") : "light");
+
+  useEffect(()=>{
+    localStorage.setItem("theme", theme);
+    const themeColor = localStorage.getItem("theme");
+    document.querySelector("html").setAttribute("data-theme", themeColor);
+  },[theme])
+
+
+
+  const toggleTheme = (e) => {
+    if(e.target.checked){
+      setTheme("dark")
+    }else{
+      setTheme("light");
+    }
+  }
   
   const location = useLocation();
   const {id} = useParams();
   const { pathname } = location;
   const {setToken, setUser, user} = useAuth();
+  const [employee, setEmployee] = useState([])
 
   const logOut = () => {
 
@@ -31,7 +50,15 @@ function DefaultLayout() {
   useEffect(()=>{
     axiosClient.get("/user")
     .then(({data}) => {
-        setUser(data);
+        setUser(data);  
+    })
+
+    axiosClient.get("/employee")
+    .then(({data: {data}}) => {
+        setEmployee(data)
+        if(!data.length){
+          return <Navigate to='/employee' />
+        }
       
     })
 
@@ -41,6 +68,24 @@ function DefaultLayout() {
   if(!token) {
     return <Navigate to='/login' />
   }
+
+
+  const Component  = () => {
+    if(!employee.length) {
+       return links.filter(link => link.path === '/dashboard')
+       .map((link ,i) => (
+            <li key={i}>
+            <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
+                {link.icons}
+                <span className="-mr-1 font-medium">{link.name}</span>
+            </Link>
+        </li>
+        ))
+    }
+  }
+
+
+
 
   return (
     <div className="App ">
@@ -70,24 +115,38 @@ function DefaultLayout() {
                     </div> 
                  )}
                   <div className=' max-md:hidden flex mt-4 justify-center items-center gap-2'>
-              
-                    <h5 className="hidden  text-xl font-semibold text-gray-600 lg:block">{user.name}</h5>
-                    /
-                    <span className="hidden text-gray-400 lg:block">Admin</span>
+                    
+                    <h5 className="hidden  text-xl font-semibold  lg:block">{user.name}</h5>
+                    {/* /
+                    <span className="hidden  lg:block">Admin</span> */}
                   </div>
               </div>
 
               <ul className="space-y-2 tracking-wide mt-8">
-                {links.map((link, i) =>{
-                  return (
-                    <li key={i}>
-                    <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : "text-gray-600 group"} `}>
-                        {link.icons}
-                        <span className="-mr-1 font-medium">{link.name}</span>
-                    </Link>
-                </li>
-                  )
-                })}
+                {/* { links.map((link, i) =>{
+                  if(link.path === "/dashboard"){
+                    return (
+                      <li key={i}>
+                      <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
+                          {link.icons}
+                          <span className="-mr-1 font-medium">{link.name}</span>
+                      </Link>
+                  </li>
+                    )
+                  }else{
+                    return (
+                      <li key={i}>
+                      <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
+                          {link.icons}
+                          <span className="-mr-1 font-medium">{link.name}</span>
+                      </Link>
+                  </li>
+                    )
+                  }
+                 
+                })} */}
+
+                <Component />
                 
               </ul>
           </div>
@@ -135,7 +194,7 @@ function DefaultLayout() {
                 
                   <div className="flex space-x-4">       
                       <div hidden className="md:block">
-                          <div className="relative flex items-center text-gray-400 focus-within:text-[#00b894]">
+                          <div className="relative flex items-center  focus-within:text-[#00b894]">
                               <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
                               <svg xmlns="http://ww50w3.org/2000/svg" className="w-4 fill-current" viewBox="0 0 35.997 36.004">
                                   <path id="Icon_awesome-search" data-name="search" d="M35.508,31.127l-7.01-7.01a1.686,1.686,0,0,0-1.2-.492H26.156a14.618,14.618,0,1,0-2.531,2.531V27.3a1.686,1.686,0,0,0,.492,1.2l7.01,7.01a1.681,1.681,0,0,0,2.384,0l1.99-1.99a1.7,1.7,0,0,0,.007-2.391Zm-20.883-7.5a9,9,0,1,1,9-9A8.995,8.995,0,0,1,14.625,23.625Z"></path>
@@ -160,9 +219,18 @@ function DefaultLayout() {
                               <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                           </svg>
                       </button>
-                      <button aria-label="notification" className="mt-2">
-                           <input type="checkbox" value="synthwave" className="toggle theme-controller"/>
+                      <button aria-label="notification" className="w-10 h-10 flex justify-center items-center rounded-xl border bg-gray-100 focus:bg-gray-100 active:bg-gray-200">
+                      <label className="swap swap-rotate ">
+                          <input type="checkbox" onChange={toggleTheme} checked={theme === "light" ? false : true}/>
+                         
+                            <svg className='swap-off fill-current w-6 h-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
+
+                            <svg className='swap-on fill-current w-6 h-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
+
+                          
+                        </label>
                       </button>
+                    
                     
                   </div>
               </div>

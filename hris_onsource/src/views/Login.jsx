@@ -1,19 +1,20 @@
-import React, { useEffect, useRef } from 'react'
+import React, {  useRef } from 'react'
 import { useAuth } from '../context';
 import axiosClient from '../axiosClient';
 import 'boxicons'
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+
 function Login() {
 
   const {setUser, setToken} =  useAuth();
   const email = useRef();
   const password = useRef();
 
-
+  
   const loginWithGoogle =  useGoogleLogin({
         onSuccess: tokenResponse => {
-                axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+                axios.get(`${import.meta.env.VITE_API_GOOGLE_LINK}`, {
         headers: {
             Authorization: `Bearer ${tokenResponse.access_token}`
         }
@@ -58,7 +59,7 @@ function Login() {
     const payload = {
       email: email.current.value,
       password: password.current.value,
-      provider: 'LOCAL',
+      provider: 'CREDENTIAL',
     }
 
     axiosClient.post('/login', payload)
@@ -67,8 +68,9 @@ function Login() {
        setUser(data.user);
     }).catch((err)=>{
         const {response} = err;
+        console.log(response.data);
         if (response && response.status === 422) {
-            console.log(response.data.errors);
+            alert(response.data.errors.email[0], response.data.errors.password[0])
             localStorage.removeItem('ACCESS_TOKEN');
         }
     })

@@ -8,6 +8,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\GithubAuthController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\AttendanceController;
 
 
 
@@ -20,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
     Route::apiResource('employee', EmployeeController::class);
+    Route::apiResource('attendance', AttendanceController::class);
 
     
 });

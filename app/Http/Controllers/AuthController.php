@@ -18,7 +18,6 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request){
         $data = $request->validated();
-        
         $existingUser = User::where('email', $data['email'])->first();
   
         if ($existingUser) {
@@ -45,6 +44,7 @@ class AuthController extends Controller
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
+                'provider' => $data['provider'],
             ]);
         }
       
@@ -58,19 +58,17 @@ class AuthController extends Controller
 
     public function logout(Request $request){
     
-        return $request->user() && $request->user()->currentAccessToken();
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'User logged out successfully'], 200);
     }
 
     public function login(LoginRequest $request){
-
+        
         $credentials =  $request->validated();
-
 
         if(!Auth::attempt($credentials)){
             return response()->json([
-                'message' => 'Invalid credentials',
+                'message' => 'Invalid credentials or the email is already use as GOOGLE login',
             ], 422);  
         }
 
@@ -79,6 +77,9 @@ class AuthController extends Controller
             'user' => auth()->user(),
             'token' => $token,
         ], 201);
+
+
+      
 
     
     }

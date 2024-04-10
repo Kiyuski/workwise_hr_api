@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->string('id')->primary();
+            $table->unsignedBigInteger('position_id')->nullable();
             $table->foreignId('department_id')->references('id')->on('departments');
-            $table->foreignId('position_id')->references('id')->on('positions');
+            $table->foreign('position_id')->references('id')->on('positions');
             $table->string("employee_id");
             $table->string("employee_name");
             $table->string("employee_email");

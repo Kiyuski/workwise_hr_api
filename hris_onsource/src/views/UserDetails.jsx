@@ -115,7 +115,6 @@ function UserDetails() {
              .then(({data : {data}})=>{
                setLoading(false);
                setEmpData({...empData,
-                 employee_image: data.employee_image,
                  employee_provincial_address: data.employee_provincial_address ,
                  employee_birthdate: moment(data.employee_birthdate, "ddd MMM DD YYYY HH:mm:ss GMTZZ").format('L'),
                  employee_date_birth: moment(data.employee_date_birth, "ddd MMM DD YYYY HH:mm:ss GMTZZ").format('L'),

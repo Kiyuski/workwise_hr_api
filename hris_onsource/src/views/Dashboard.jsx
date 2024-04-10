@@ -1,5 +1,112 @@
-
+import { useEffect, useState } from "react"
+import axiosClient from "../axiosClient";
+import DatePicker from "react-datepicker";
 function Dashboard() {
+
+    const [employee, setEmployee] = useState([]);
+    const [startDate, setStartDate] = useState(new Date());
+
+    useEffect(()=>{
+      
+        axiosClient.get("/employee")
+        .then(({data: {data}}) => {
+            setEmployee(data)
+        })
+    
+      },[])
+
+      if(!employee.length){
+        return (
+            <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
+                <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
+                    <div className="hero min-h-screen bg-base-200">
+                        <div className="hero-content text-center">
+                            <div>
+                                <h1 className="text-5xl font-bold">Hi there, Welcome to Workwise<span className="text-[#00b894]">HR.</span></h1>
+                                    <div className="text-start">
+                                    <p className="pt-6 opacity-70 font-medium">Look like no ADMIN or HR role in this application, so you can set your account to that role.</p>
+                                    <p className="pb-6 opacity-70 font-medium italic">Note: <span className=" text-red-500">Only 1 admin and 1 HR can set their account to that role.</span></p>
+                                    </div>
+                                <button className="btn bg-[#00b894] opacity-70 text-white hover:bg-[#00b894] hover:opacity-100 transition-all ease-in" onClick={()=> {
+                                    document.getElementById('my_modal_5').showModal();
+                                }}>Set Your Role</button>
+                            </div>
+                        </div>
+                    </div>   
+                </div>
+                <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle ">
+        <div className="modal-box w-[10px]">
+            <div className="flex justify-between">
+            <div>
+            <h3 className="font-bold text-lg">New Employee</h3>
+            <span className="label-text opacity-70 ">Input all the fields below</span>
+            </div>
+            <button type='button' className="btn shadow" >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <form  method="dialog">
+            <div className="avatar mt-5 w-full flex-col flex justify-center items-center gap-3">
+            </div>
+            <label className="input input-bordered mt-2 flex items-center gap-2">
+              Employee ID#
+               <input  type="text" className="grow" placeholder="i.g Onsoure000***" />
+            </label>
+            <label className="input input-bordered mt-2 flex items-center gap-2">
+              Full name
+               <input  type="text" className="grow" placeholder="i.g marcus" />
+            </label>
+            <label className="input input-bordered mt-2 flex items-center gap-2">
+               Address
+               <input  type="text" className="grow" placeholder="i.g address"  />
+            </label>
+            <label className="input input-bordered mt-2 flex items-center gap-2">
+               Email
+               <input type="email" className="grow" placeholder="i.g email" />
+            </label>
+            <label className="input input-bordered mt-2 flex items-center gap-2">
+               Contact#:
+               <input  type="number" className="grow" placeholder="i.g 0969*****" />
+            </label>
+
+            <label className="input input-bordered mt-2 flex items-center gap-2 mb-4">
+               Start-date:
+               <DatePicker className="grow"  selected={startDate}  onChange={(date) => setStartDate(date)} />
+            </label>
+        
+
+            <label className="form-control w-full mt-2">
+               <div className="label">
+                  <span className="label-text">Role</span>
+               </div>
+               <select className="select select-bordered" >
+                  <option disabled defaultValue>Select here</option>
+                  <option value="HR">HR</option>
+                  <option value="ADMIN">ADMIN</option>
+               </select>
+            </label>
+
+            <label className="form-control w-full mt-2">
+               <div className="label">
+                  <span className="label-text">Gender</span>
+               </div>
+               <select className="select select-bordered" >
+                  <option disabled defaultValue>Select here</option>
+                  <option value="M">MALE</option>
+                  <option value="F">FEMALE</option>
+               </select>
+            </label>
+
+           
+            <div className="modal-action">
+                <button type='submit'  className="btn btn-success text-white w-[30%]">Submit</button>
+            </div>
+            </form>
+        </div>
+    </dialog>
+            </div> 
+        )
+      }
 
   return (
       <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] bg-white">
@@ -72,7 +179,12 @@ function Dashboard() {
 
               </div>
           </div> 
+
+        
       </div> 
+
+
+
   )
 }
 

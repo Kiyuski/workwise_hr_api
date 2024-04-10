@@ -13,6 +13,10 @@ import Reports from "./views/Reports";
 import AddExcel from "./views/AddExcel";
 import ShowUser from "./views/ShowUser";
 import UserDetails from "./views/UserDetails";
+import Attendance from "./views/Attendance";
+import Leave from "./views/Leave";
+import Addnewattendance from "./views/Add-new-attendance";
+import Mainhero from "./views/Mainhero";
 
 
 
@@ -23,15 +27,20 @@ const router = createBrowserRouter([
         element: <DefaultLayout />,
         children: [
           { path: "/", element: <Navigate to="/login" /> },
+          { path: "/Authenticate", element: <Mainhero />},
           { path: "/dashboard", element: <Dashboard /> },
           { path: "/positions", element: <Positions /> },
           { path: "/department", element: <Department />},
           { path: "/employees", element: <Employees />},
           { path: "/employees/add-excel", element: <AddExcel />},
           { path: "/history", element: <History />},
+          { path: "/attendance", element: <Attendance />},
+          { path: "/leave", element: <Leave />},
+          { path: "/reports", element: <Reports />},
+          { path: "/attendance/addNewAttendance", element: <Addnewattendance />},
           { path: "/employees/:id/update", element: <ShowUser />},
           { path: "/employees/:id", element: <UserDetails />},
-          { path: "/reports", element: <Reports />},
+      
         ]
         
       },

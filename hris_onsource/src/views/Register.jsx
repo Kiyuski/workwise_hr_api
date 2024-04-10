@@ -17,7 +17,8 @@ function Register() {
         name: name.current.value,
         email: email.current.value,
         password: password.current.value,
-        confirmed_Password: confirmedPassword.current.value,
+        confirmed_password: confirmedPassword.current.value,
+        provider: 'CREDENTIAL',
     }
 
     axiosClient.post("/register", payload)

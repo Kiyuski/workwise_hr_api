@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as XLSX from 'xlsx/xlsx.mjs';
 import axiosClient from '../axiosClient';
 import moment from 'moment';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate} from 'react-router-dom';
 function AddExcel() {
   const xlRef = useRef(null);
   const [file, setFile] = useState(null);
