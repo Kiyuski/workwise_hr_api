@@ -21,12 +21,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
     Route::apiResource('employee', EmployeeController::class);
-    Route::apiResource('attendance', AttendanceController::class);
-
+    Route::get('/attendance/employee', [AttendanceController::class, 'allemployeeattendance']);
+    Route::apiResource('attendance', AttendanceController::class)->names([
+        'index' => 'attendance.index',
+        'store' => 'attendance.store',
+        'show' => 'attendance.show',
+        'update' => 'attendance.update',
+        'destroy' => 'attendance.destroy',
+    ]);
+    
     
 });
 
-Route::post('/upload', [ImageController::class, 'upload']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/oauth/github/token', [GithubAuthController::class, 'exchangeToken']);

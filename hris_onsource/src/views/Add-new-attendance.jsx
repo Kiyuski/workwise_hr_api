@@ -9,7 +9,7 @@ import moment from 'moment';
 import DatePicker from "react-datepicker";
 import { useAuth } from '../context';
 import axiosClient from '../axiosClient';
-import { Navigate } from 'react-router-dom';
+
 
 function Addnewattendance() {
     const {user} = useAuth();
@@ -25,57 +25,42 @@ function Addnewattendance() {
 
     useEffect(()=>{
        empRef.current.value = user.name || "";
-
+       axiosClient.get('/employee')
+      .then(({data})=>{
+        //  setAttendance(data.find(att => att.employee_email === user.email).employee_email);
+       setAttendance({...attendance, employee_id: data.data.find(att => att.employee_email === user.email).employee_id});
+      })
+      .catch((err)=>{
+         const {response} = err;
+         if(response &&  response.status  === 422){
+           console.log(response.data)
+         }
+      })
     })
 
     const handleSubmitAttendance = (e) => {
         e.preventDefault();  
+        console.log(attendance);
+        // axiosClient.post('/attendance', {...attendance, attendance_date: moment(attendance.attendance_date).format('L')})
+        //  .then((r)=>{
+        // //   alert("Attendance is created successfully!");
+        // //   window.location.href = "/attendance"
+        // console.log(r);
+        //  })
+        //  .catch((err)=>{
+        //     const {response} = err;
+        //     if(response &&  response.status  === 422){
 
-        axiosClient.post('/attendance', {...attendance, attendance_date: moment(attendance.attendance_date).format('L')})
-         .then(()=>{
-          alert("Attendance is created successfully!");
-          Navigate("/attendance")
-         })
-         .catch((err)=>{
-            const {response} = err;
-            if(response &&  response.status  === 422){
-              console.log(response.data)
-            }
-         })
+        //       console.log(response.data)
+        //     }
+        //  })
          
     }
 
 
   
 
-  const calculateTotalHours = (e) => {
-    e.preventDefault();
-    const breakTime = "1:00";
-    const timeInParts = attendance.attendance_time_in.split(':');
-    const timeOutParts =  attendance.attendance_time_out?.split(':') ;
-    const breakTimeParts = breakTime.split(':');
-    
-    const startTime = new Date();
-    startTime.setHours(timeInParts[0], timeInParts[1].split(' ')[0]);
-
-    const endTime = new Date();
-    endTime.setHours(parseInt(timeOutParts[0]) % 12 + (timeOutParts[1]?.split(' ')[1].toLowerCase() === 'pm' ? 12 : 0), 
-    timeOutParts[1]?.split(' ')[0]);
-
-
-    const breakEndTime = new Date();
-    breakEndTime.setHours(breakTimeParts[0], breakTimeParts[1]);
-   
-    let totalMilliseconds =  endTime.getTime() - startTime.getTime();
-    totalMilliseconds -= breakTimeParts[0] * 60 * 60 * 1000;
-
-    const totalHours = totalMilliseconds / (1000 * 60 * 60);
-    const hours = Math.floor(totalHours);
-    const minutes = Math.round((totalHours - hours) * 60);
-
-    console.log(`${hours} hours ${minutes} minutes`);
-
-  };
+  
 
 
   return (
@@ -133,7 +118,7 @@ function Addnewattendance() {
                             <span className="label-text">Select field of work:</span>
                         </div>
                         <select className="select select-bordered" onChange={(e)=>  setAttendance({...attendance, attendance_field:e.target.value})}>
-                            <option disabled defaultValue>Select here</option>
+                            <option defaultValue>Select here</option>
                             <option>OFFICE</option>
                             <option>HOME</option>
                         </select>

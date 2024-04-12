@@ -34,7 +34,9 @@ function DefaultLayout() {
   const {id} = useParams();
   const { pathname } = location;
   const {setToken, setUser, user} = useAuth();
-  const [employee, setEmployee] = useState([])
+  const [role, setRole] = useState("");
+  const [position, setPosition] = useState("");
+  
 
   const logOut = () => {
 
@@ -47,22 +49,35 @@ function DefaultLayout() {
   }
 
 
+
+
   useEffect(()=>{
-    axiosClient.get("/user")
-    .then(({data}) => {
-        setUser(data);  
-    })
+    Promise.all([getDataList('user'), getDataList('employee'), getDataList('position')])
+      .then((data) => {
+        setUser(data[0]);  
+        setRole(data[1].data.find(emp => emp.employee_email === data[0].email)?.employee_role)
+        setPosition(data[2].data.find(pos => pos.position_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.position_id)?.position);
+      })
+      .catch((err) => {
+          console.error(err);
+      });
+ },[])
 
-    axiosClient.get("/employee")
-    .then(({data: {data}}) => {
-        setEmployee(data)
-        if(!data.length){
-          return <Navigate to='/employee' />
-        }
-      
-    })
 
-  },[])
+
+  const getDataList = async (path) => {
+    try {
+      const res = await axiosClient.get(`/${path}`)
+      return res.data;
+    } catch (err) {
+       const {response} = err;
+       if(response &&  response.status  === 422){
+         console.log(response.data)
+       }
+    }
+ } 
+
+
 
   const {token} = useAuth();
   if(!token) {
@@ -71,8 +86,42 @@ function DefaultLayout() {
 
 
   const Component  = () => {
-    if(!employee.length) {
-       return links.filter(link => link.path === '/dashboard')
+    switch (role) {
+      case 'HR':
+      case 'ADMIN':
+        return links.filter(link => link.path === '/dashboard' 
+        || link.path === '/positions' 
+        || link.path === '/department'
+        || link.path === '/employees'
+        || link.path === '/attendance'
+        || link.path === '/leave'
+        || link.path === '/history'
+      ) 
+        .map((link ,i) => (
+             <li key={i}>
+             <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
+                 {link.icons}
+                 <span className="-mr-1 font-medium">{link.name}</span>
+             </Link>
+         </li>
+         ))
+
+      case 'EMPLOYEE':
+        return links.filter(link => link.path === '/dashboard'
+        || link.path === '/attendance'
+        || link.path === '/leave'
+      ) 
+        .map((link ,i) => (
+             <li key={i}>
+             <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
+                 {link.icons}
+                 <span className="-mr-1 font-medium">{link.name}</span>
+             </Link>
+         </li>
+         ))
+    
+      default:
+        return links.filter(link => link.path === '/dashboard')
        .map((link ,i) => (
             <li key={i}>
             <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
@@ -114,38 +163,24 @@ function DefaultLayout() {
                     </div>
                     </div> 
                  )}
-                  <div className=' max-md:hidden flex mt-4 justify-center items-center gap-2'>
+                  <div className=' max-md:hidden flex flex-col mt-4 justify-center items-center gap-2'>
                     
-                    <h5 className="hidden  text-xl font-semibold  lg:block">{user.name}</h5>
-                    {/* /
-                    <span className="hidden  lg:block">Admin</span> */}
+                    <h5 className="hidden  text-xl font-semibold  lg:block">{user.name}</h5> 
+                    <span className='border w-full'></span>
+                    
+                    {!position && !role && (
+                      <span className="hidden opacity-70  lg:block">No Position</span>
+                    )}
+                    {role && (
+                      <>
+                      <span className="hidden opacity-70  lg:block">{role === "EMPLOYEE" ? position : role}</span>
+                      </>
+                    )}
+                   
                   </div>
               </div>
 
               <ul className="space-y-2 tracking-wide mt-8">
-                {/* { links.map((link, i) =>{
-                  if(link.path === "/dashboard"){
-                    return (
-                      <li key={i}>
-                      <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
-                          {link.icons}
-                          <span className="-mr-1 font-medium">{link.name}</span>
-                      </Link>
-                  </li>
-                    )
-                  }else{
-                    return (
-                      <li key={i}>
-                      <Link to={`${link.path}`} aria-label="dashboard" className={`relative px-4 py-3 flex items-center space-x-4 rounded-xl ${link.name.toLowerCase()=== pathname.split('/')[1] ? "rounded-xl text-white bg-gradient-to-r from-[#00b894] to-[#00b894]" : " group"} `}>
-                          {link.icons}
-                          <span className="-mr-1 font-medium">{link.name}</span>
-                      </Link>
-                  </li>
-                    )
-                  }
-                 
-                })} */}
-
                 <Component />
                 
               </ul>

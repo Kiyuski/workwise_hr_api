@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->string('employee_id');
+            $table->foreign('employee_id')->references('id')->on('employees');
             $table->string("attendance_time_in");
             $table->string("attendance_time_out");
             $table->string("attendance_field");

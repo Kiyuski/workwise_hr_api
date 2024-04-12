@@ -17,8 +17,9 @@ class EmployeeController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        return EmployeeResource::collection(Employee::orderBy('id', 'desc')->get());
+    {   
+   
+        return EmployeeResource::collection(Employee::orderBy("created_at", 'desc')->get());
     }
     /**
      * Store a newly created resource in storage.
@@ -28,6 +29,7 @@ class EmployeeController extends Controller
         //
    
         $datas = $request->validated();
+
         return $this->storeEmployee($request, $datas);
 
     }
@@ -128,7 +130,6 @@ class EmployeeController extends Controller
 
     private function storeEmployee($request, $datas) {
 
-      
         if($request->has('_employeeData')){
 
             foreach ($datas["_employeeData"] as $data) {
@@ -151,12 +152,12 @@ class EmployeeController extends Controller
             }
 
             return response()->json([
-                "message" => "Product request is successfully send!"
+                "message" => "Employee request is successfully send!"
             ], 200);
         }
 
  
-        $base64Image = $datas['employee_image'];
+        $base64Image = $datas['employee_image'] ?? null;
         $image = $base64Image;
         if (strpos($base64Image, 'data:image/') === 0) {
             $imageInfo = explode(";base64,", $base64Image);
@@ -198,7 +199,20 @@ class EmployeeController extends Controller
 
      
         } else {
-            return null;
+           
+            Employee::create([
+                'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
+                'employee_id' => $datas['employee_id'],
+                'employee_name' => $datas['employee_name'],
+                'employee_email' => $datas['employee_email'],
+                'employee_role' => $datas['employee_role'],
+                'employee_status' => $datas['employee_status'],
+                'employee_start_date' => $datas['employee_start_date'],
+            ]);
+
+            return response()->json([
+                "message" => "Your account is set successfully.",
+            ], 200);
         }
     }
 

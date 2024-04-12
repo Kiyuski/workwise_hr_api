@@ -5,6 +5,93 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from 'moment';
 
+
+
+const Items = ({empList, changeStatus, positions, departments}) => {
+
+   if(empList.length){
+      return empList.map((emp , i)=>{
+        
+            return (
+              <tr key={i}>
+              <td className="p-3">
+                 <div className="avatar">
+                    <div className="w-8 rounded">
+                       <img src={`${emp.employee_image || "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`} alt="Tailwind-CSS-Avatar-component" />
+                    </div>
+                 </div>
+              </td>
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+                 {emp.employee_id}
+              </td>
+
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+                 {emp.employee_name}
+              </td>
+
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+               {departments.find(d => parseInt(d.id) === parseInt(emp.department_id))?.department}
+              </td>
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+                 {positions.find(p => parseInt(p.position_id) === parseInt(emp.position_id))?.position}
+              </td>
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+                 {emp.employee_start_date}
+              </td>
+              <td className={`p-3 whitespace-nowrap text-sm  text-gray-500 ${emp.employee_end_date === null ? "text-green-700 font-bold uppercase" : "font-normal"}`}>
+                 {emp.employee_end_date || "Ongoing"}
+              </td>
+              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+                 {moment(emp.created_at).calendar()}
+              </td>
+              <td className={`p-3 whitespace-nowrap text-sm font-bold uppercase`}>
+                    <select value={emp.employee_status} className={`${emp.employee_status === "Active" ? "text-blue-700" : "text-red-700"} select select-bordered select-sm w-28 opacity-90`} onChange={(e)=> {
+                       changeStatus(e.target.value, emp.id, emp.employee_start_date, emp.employee_end_date)
+                    }}>
+                       <option disabled defaultValue>Select here</option>
+                       <option value="Active">ACTIVE</option>
+                       <option value="Inactive">INACTIVE</option>
+                    </select>
+                
+              </td>
+              <td className="pt-6 px-2 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
+                    <Link to={`/employees/${emp.id}`}>
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-[#00b894] cursor-pointer transition-all opacity-75 hover:opacity-100">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                       </svg>
+                    </Link> 
+                    <span>/</span>
+                    <Link to={`/employees/${emp.id}/update`}>
+                    <svg  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-[#0984e3] cursor-pointer transition-all opacity-75 hover:opacity-100">
+                       <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
+                    </Link> 
+              </td>
+           </tr>
+            )
+      })
+      
+   }else if (!empList.length) {
+      return (
+       
+          <tr>
+          <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
+           <div className='ml-5'>
+             <span>No data found!</span>
+          </div>
+          </td>
+       </tr>
+      )
+   }else{
+      <tr>
+      <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
+       <div className='ml-5'>
+         <span className="loading loading-ring loading-lg text-primary"></span>
+      </div>
+      </td>
+   </tr>
+   }
+}
  
 function Employees() {
 
@@ -46,108 +133,19 @@ function Employees() {
 
 
    useEffect(()=>{
-      Promise.all([getDataList('position'), getDataList('department')])
+      Promise.all([getDataList('position'), getDataList('department'), getDataList('user')])
         .then((data) => {
             setPosition(data[0].data);
             setDepartment(data[1].data);
-            getAllEmployees(data[1].data, data[0].data );
-        
+            getAllEmployees(data[2]);
         })
         .catch((err) => {
             console.error(err);
         });
    },[])
 
-
-   const Items = ({empList}) => {
-
-      if(empList.length){
-         return empList.map((emp , i)=>{
-               return (
-                 <tr key={i}>
-                 <td className="p-3">
-                    <div className="avatar">
-                       <div className="w-8 rounded">
-                          <img src={`${emp.employee_image || "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`} alt="Tailwind-CSS-Avatar-component" />
-                       </div>
-                    </div>
-                 </td>
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_id}
-                 </td>
+    
    
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_name}
-                 </td>
-   
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_address}
-                 </td>
-   
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_deparment}
-                 </td>
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_position}
-                 </td>
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {emp.employee_start_date}
-                 </td>
-                 <td className={`p-3 whitespace-nowrap text-sm  text-gray-500 ${emp.employee_end_date === null ? "text-green-700 font-bold uppercase" : "font-normal"}`}>
-                    {emp.employee_end_date || "Ongoing"}
-                 </td>
-                 <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                    {moment(emp.created_at).calendar()}
-                 </td>
-                 <td className={`p-3 whitespace-nowrap text-sm font-bold uppercase`}>
-                       <select value={emp.employee_status} className={`${emp.employee_status === "Active" ? "text-blue-700" : "text-red-700"} select select-bordered select-sm w-28 opacity-90`} onChange={(e)=> {
-                          changeStatus(e.target.value, emp.id, emp.employee_start_date, emp.employee_end_date)
-                       }}>
-                          <option disabled defaultValue>Select here</option>
-                          <option value="Active">ACTIVE</option>
-                          <option value="Inactive">INACTIVE</option>
-                       </select>
-                   
-                 </td>
-                 <td className="pt-6 px-2 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
-                       <Link to={`/employees/${emp.id}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-[#00b894] cursor-pointer transition-all opacity-75 hover:opacity-100">
-                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                          </svg>
-                       </Link> 
-                       <span>/</span>
-                       <Link to={`/employees/${emp.id}/update`}>
-                       <svg  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-[#0984e3] cursor-pointer transition-all opacity-75 hover:opacity-100">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                       </svg>
-                       </Link> 
-                 </td>
-              </tr>
-               )
-         })
-         
-      }else if (!empList.length) {
-         return (
-          
-             <tr>
-             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-              <div className='ml-5'>
-                <span>No data found!</span>
-             </div>
-             </td>
-          </tr>
-         )
-      }else{
-         <tr>
-         <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-          <div className='ml-5'>
-            <span className="loading loading-ring loading-lg text-primary"></span>
-         </div>
-         </td>
-      </tr>
-      }
-   }
-
 
    const changeStatus = (value, id, startDate, currentEndDate) => {
       document.getElementById('my_modal_3').showModal()
@@ -181,7 +179,7 @@ function Employees() {
             .then(()=>{
                alert("Status is updated successfully!");
                document.getElementById('my_modal_3').close()
-               getAllEmployees(department, position);
+               getAllEmployees();
                setPayload({
                   ...payload,
                   employee_status:"",
@@ -200,34 +198,14 @@ function Employees() {
                }
             })
    }
-
-   const getAllEmployees = async (de, po) => {
+  
+   const getAllEmployees = async (user = null) => {
+   
       try {
          const res = await axiosClient.get('/employee')
-         const empData = [];
-        
-         res.data.data.map(data => {
-           
-            empData.push({
-               id:data.id,
-               employee_id: data.employee_id,
-               employee_name: data.employee_name,
-               employee_address: data.employee_address,
-               employee_phone: data.employee_phone,
-               employee_image: data.employee_image,
-               employee_email: data.employee_email,
-               employee_role: data.employee_role,
-               employee_gender: data.employee_gender,
-               employee_deparment: de.find(d => d.id === data.department_id).department,
-               employee_position: po.find(d => d.position_id === data.position_id).position,
-               employee_status: data.employee_status,
-               employee_start_date: data.employee_start_date,
-               employee_end_date: data.employee_end_date,
-               created_at: data.created_at,
-          })
-          
-          setEmployeeList(empData.sort((a,b) => b.id - a.id));
-        });
+       
+         setEmployeeList(res.data.data.filter(r => r.employee_email !== user.email));
+      
 
        } catch (err) {
           const {response} = err;
@@ -325,6 +303,9 @@ function Employees() {
          }
       }
    } 
+
+  
+
    
   
    
@@ -353,11 +334,6 @@ function Employees() {
                            
                         <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100' onClick={()=>{
                            document.getElementById('my_modal_5').showModal();
-                           refRole.current.value = "Select here";
-                           refDep.current.value = "Select here";
-                           refPos.current.value = "Select here";
-                           refGen.current.value = "Select here";
-                           refChoose.current.value = "Select Image"
                          
                         }}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -390,9 +366,7 @@ function Employees() {
                                              EMPLOYEE NAME
                                           </th>
 
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             ADDRESS
-                                          </th>
+                                   
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              DEPARTMENT
                                           </th>
@@ -419,7 +393,7 @@ function Employees() {
                                     </thead>
                                     <tbody>
                                      
-                                    <Items empList = {empList}/>         
+                                    <Items empList = {empList} changeStatus={changeStatus} positions = {position} departments={department}/>         
                                     </tbody>
                                  </table>
                               </div>
@@ -510,7 +484,7 @@ function Employees() {
                   <span className="label-text">Status</span>
                </div>
                <select ref={refStat} className="select select-bordered" onChange={(e)=> setPayload({...payload, employee_status: e.target.value})}>
-                  <option disabled defaultValue>Select here</option>
+                  <option  defaultValue>Select here</option>
                   <option value="Active">ACTIVE</option>
                   <option value="Inactive">INACTIVE</option>
                </select>
@@ -522,7 +496,7 @@ function Employees() {
                   <span className="label-text">Gender</span>
                </div>
                <select ref={refGen} className="select select-bordered" onChange={(e)=> setPayload({...payload, employee_gender: e.target.value})}>
-                  <option disabled defaultValue>Select here</option>
+                  <option  defaultValue>Select here</option>
                   <option value="M">MALE</option>
                   <option value="F">FEMALE</option>
                </select>
@@ -533,7 +507,7 @@ function Employees() {
                   <span className="label-text">Role</span>
                </div>
                <select ref={refRole} className="select select-bordered" onChange={(e)=> setPayload({...payload, employee_role: e.target.value})}>
-                  <option disabled defaultValue>Select here</option>
+                  <option  defaultValue>Select here</option>
                   <option value="HR">HR</option>
                   <option value="ADMIN">ADMIN</option>
                   <option value="EMPLOYEE">EMPLOYEE</option>
@@ -545,7 +519,7 @@ function Employees() {
                   <span className="label-text">Department</span>
                </div>
                <select ref={refDep} className="select select-bordered" onChange={(e)=> setPayload({...payload, department_id: e.target.value})}>
-                  <option disabled defaultValue>Select here</option>
+                  <option  defaultValue>Select here</option>
                   {department.map((de)=>{
                      return <option key={de.id} value={de.id}>{de.department}</option> ;
                   })}
@@ -558,7 +532,7 @@ function Employees() {
                   <span className="label-text">Position</span>
                </div>
                <select ref={refPos} className="select select-bordered" onChange={(e)=> setPayload({...payload, position_id: e.target.value})}>
-                  <option disabled defaultValue>Select here</option>
+                  <option defaultValue>Select here</option>
                   {position.map((pos)=>{
                      return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option> ;
                   })}

@@ -22,6 +22,8 @@ class StoreEmployeeRequest extends FormRequest
     public function rules(): array
     {
         $rules = [];
+
+       
         if($this->has('employee_image')){
             $rules = [
                 'employee_id' => 'string|required',
@@ -39,9 +41,19 @@ class StoreEmployeeRequest extends FormRequest
                 'employee_end_date' => 'string|nullable',
             ];
 
+        }elseif($this->has('type')){
+
+            $rules = [
+                'employee_id' => 'string|required',
+                'employee_name' => 'string|max:255|required',
+                'employee_email' => 'string|max:255|required|email|unique:employees,employee_email',
+                'employee_role' => 'required|max:255|string',
+                'employee_status' => 'string|required',
+                'employee_start_date' => 'string|nullable|required',
+            ];
         }else{
 
-            $rules = ['_employeeData' => 'array|required'];
+            $rules =  ['_employeeData' => 'array|required'];
         };
 
 

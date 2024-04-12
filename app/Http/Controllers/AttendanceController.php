@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Http\Requests\StoreAttendanceRequest;
 use App\Http\Requests\UpdateAttendanceRequest;
 use App\Http\Resources\AttendanceResource;
+use Illuminate\Http\Request;
 
 
 class AttendanceController extends Controller
@@ -13,9 +14,11 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+  
+    public function index(Request $request)
     {
         //
+     
         return AttendanceResource::collection(Attendance::orderBy('created_at')->get());
     }
 
@@ -25,12 +28,14 @@ class AttendanceController extends Controller
     public function store(StoreAttendanceRequest $request)
     {
         //
-        $data = $request->validated();
-        Attendance::create($data);
-        return response()->json([
-           'message' => 'Attendance is created successfully',
-            'error' => $data
-        ], 200);
+
+        return $request;
+        // $data = $request->validated();
+        // Attendance::create($data);
+        // return response()->json([
+        //    'message' => 'Attendance is created successfully',
+        //     'error' => $data
+        // ], 200);
         
     }
 
@@ -57,4 +62,11 @@ class AttendanceController extends Controller
     {
         //
     }
+
+    public function allEmployeeAttendance()
+    {
+        // Get all employees with their attendance
+       return 'hello';
+    }
+
 }

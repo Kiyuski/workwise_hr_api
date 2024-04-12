@@ -14,14 +14,15 @@ return new class extends Migration
         Schema::create('employees', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->unsignedBigInteger('position_id')->nullable();
-            $table->foreignId('department_id')->references('id')->on('departments');
+            $table->unsignedBigInteger('department_id')->nullable();
+            $table->foreign('department_id')->references('id')->on('departments');
             $table->foreign('position_id')->references('id')->on('positions');
             $table->string("employee_id");
             $table->string("employee_name");
             $table->string("employee_email");
-            $table->string("employee_phone");
-            $table->string("employee_address");
-            $table->string("employee_gender");
+            $table->string("employee_phone")->nullable();
+            $table->string("employee_address")->nullable();
+            $table->string("employee_gender")->nullable();
             $table->string("employee_role");
             $table->string("employee_status");
             $table->string("employee_image")->nullable();
