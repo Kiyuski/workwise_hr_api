@@ -28,7 +28,7 @@ class StoreAttendanceRequest extends FormRequest
     {
         return [
             'employee_id' => 'string|exists:employees,id',
-            'attendance_date' => 'required|date|string|unique:attendances,attendance_date',
+            'attendance_date' => 'required|date|string',
             'attendance_field' => 'required|string',
             'attendance_time_in' => 'required|string',
             'attendance_time_out' => 'required|string|after:attendance_time_in'

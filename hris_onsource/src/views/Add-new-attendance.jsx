@@ -9,7 +9,7 @@ import moment from 'moment';
 import DatePicker from "react-datepicker";
 import { useAuth } from '../context';
 import axiosClient from '../axiosClient';
-
+import dayjs from 'dayjs';
 
 function Addnewattendance() {
     const {user} = useAuth();
@@ -17,18 +17,20 @@ function Addnewattendance() {
     const empRef = useRef(null);
   
     const [attendance, setAttendance] = useState({
-        attendance_time_in: "",
-        attendance_time_out: "",
+        attendance_time_in: moment(new Date()).format(),
+        attendance_time_out: moment(new Date().setHours(new Date().getHours() + 8)).format(),
         attendance_field: "",
         attendance_date: new Date(),
     })
+  
 
     useEffect(()=>{
        empRef.current.value = user.name || "";
        axiosClient.get('/employee')
       .then(({data})=>{
-        //  setAttendance(data.find(att => att.employee_email === user.email).employee_email);
-       setAttendance({...attendance, employee_id: data.data.find(att => att.employee_email === user.email).employee_id});
+        
+       setAttendance({...attendance, employee_id: data.data.find(att => att.employee_email === user.email).id});
+    
       })
       .catch((err)=>{
          const {response} = err;
@@ -36,24 +38,31 @@ function Addnewattendance() {
            console.log(response.data)
          }
       })
-    })
+    },[])
 
     const handleSubmitAttendance = (e) => {
         e.preventDefault();  
-        console.log(attendance);
-        // axiosClient.post('/attendance', {...attendance, attendance_date: moment(attendance.attendance_date).format('L')})
-        //  .then((r)=>{
-        // //   alert("Attendance is created successfully!");
-        // //   window.location.href = "/attendance"
-        // console.log(r);
-        //  })
-        //  .catch((err)=>{
-        //     const {response} = err;
-        //     if(response &&  response.status  === 422){
+       
+        const payload = {
+            ...attendance,
+            attendance_date: moment(attendance.attendance_date).format('L'),
+        }
 
-        //       console.log(response.data)
-        //     }
-        //  })
+      
+        axiosClient.post('/attendance', payload)
+         .then((r)=>{
+         
+          alert("Attendance is created successfully!");
+          window.location.href = "/attendance"
+      
+         })
+         .catch((err)=>{
+            const {response} = err;
+            if(response &&  response.status  === 422){
+
+              console.log(response.data)
+            }
+         })
          
     }
 
@@ -85,7 +94,8 @@ function Addnewattendance() {
                             <DemoContainer components={['TimePicker']} >
                                 <TimePicker
                                 className=" w-full"
-                                onChange={(e) => setAttendance({...attendance, attendance_time_in: moment(e.$d).format("LT")})}
+                                defaultValue={dayjs(attendance.attendance_time_in)}
+                                onChange={(e) => setAttendance({...attendance, attendance_time_in: moment(e.$d).format()})}
                                 viewRenderers={{
                                     hours: renderTimeViewClock,
                                     minutes: renderTimeViewClock,
@@ -102,12 +112,13 @@ function Addnewattendance() {
                             <DemoContainer components={['TimePicker']} >
                                 <TimePicker
                                 className=" w-full"
+                               defaultValue={dayjs(attendance.attendance_time_out)}
                                 viewRenderers={{
                                     hours: renderTimeViewClock,
                                     minutes: renderTimeViewClock,
                                     seconds: renderTimeViewClock,
                                 }}
-                                onChange={(e) =>  setAttendance({...attendance, attendance_time_out: moment(e.$d).format("LT")})}
+                                onChange={(e) =>  setAttendance({...attendance, attendance_time_out: moment(e.$d).format()})}
                                 />
                             </DemoContainer>
                         </LocalizationProvider>

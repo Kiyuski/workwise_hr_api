@@ -7,28 +7,35 @@ import axiosClient from '../axiosClient';
 import "./../App.css"
 import { googleLogout } from '@react-oauth/google';
 import { Link } from 'react-router-dom';
+import moment from 'moment';
+import { useNavigate } from "react-router-dom";
 
 
 function DefaultLayout() {
+  const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [targetTime, setTargetTime] = useState("");
+  const [startTime, setStartTime] = useState(false);
+  const [choose, setChoose] = useState("");
+  const [pause, setPause] = useState(false);
+  const [_id, setId] = useState("");
+  // const [theme, setTheme] = useState(localStorage.getItem("theme") ? localStorage.getItem("theme") : "light");
+
+  // useEffect(()=>{
+  //   localStorage.setItem("theme", theme);
+  //   const themeColor = localStorage.getItem("theme");
+  //   document.querySelector("html").setAttribute("data-theme", themeColor);
+  // },[theme])
 
 
-  const [theme, setTheme] = useState(localStorage.getItem("theme") ? localStorage.getItem("theme") : "light");
 
-  useEffect(()=>{
-    localStorage.setItem("theme", theme);
-    const themeColor = localStorage.getItem("theme");
-    document.querySelector("html").setAttribute("data-theme", themeColor);
-  },[theme])
-
-
-
-  const toggleTheme = (e) => {
-    if(e.target.checked){
-      setTheme("dark")
-    }else{
-      setTheme("light");
-    }
-  }
+  // const toggleTheme = (e) => {
+  //   if(e.target.checked){
+  //     setTheme("dark")
+  //   }else{
+  //     setTheme("light");
+  //   }
+  // }
   
   const location = useLocation();
   const {id} = useParams();
@@ -36,6 +43,7 @@ function DefaultLayout() {
   const {setToken, setUser, user} = useAuth();
   const [role, setRole] = useState("");
   const [position, setPosition] = useState("");
+  let intervalId;
   
 
   const logOut = () => {
@@ -48,15 +56,49 @@ function DefaultLayout() {
     })
   }
 
+  
+    useEffect(() => {
+  
+        if(!startTime || pause){
+          clearInterval(intervalId)
+        }else{
+          intervalId = setInterval(() => {
+            setCurrentTime(new Date());
+          }, 1000);
+        }
+        return () => clearInterval(intervalId);
+    }, [startTime, pause]);
+    
+      useEffect(() => {
+      
+        if (targetTime && currentTime >= targetTime) {
+          console.log('Reached target time!');
+          clearInterval(intervalId);
+          setStartTime(false);
+        }
+      }, [currentTime, targetTime]);
 
 
+  
 
   useEffect(()=>{
-    Promise.all([getDataList('user'), getDataList('employee'), getDataList('position')])
+    Promise.all([
+      getDataList('user'), 
+      getDataList('employee'), 
+      getDataList('position'),
+      getDataList('attendance'),
+    ])
       .then((data) => {
+        setStartTime(true)
         setUser(data[0]);  
         setRole(data[1].data.find(emp => emp.employee_email === data[0].email)?.employee_role)
         setPosition(data[2].data.find(pos => pos.position_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.position_id)?.position);
+        const time = data[3].data.find(at => at.employee_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.id)?.attendance_time_out;
+        if(!time) setStartTime(false); 
+        setTargetTime(new Date(time));
+        setChoose("TIMEIN")
+        setPause(false);
+        setId(data[3].data.find(at => at.attendance_date === moment(new Date()).format("L"))?.id );
       })
       .catch((err) => {
           console.error(err);
@@ -76,6 +118,33 @@ function DefaultLayout() {
        }
     }
  } 
+
+
+ const handleSubmitPauseTime = () => {
+      switch (choose) {
+        case "LUNCH":
+           setPause(true)
+           document.getElementById('my_modal_4').close()
+          break;
+        case "TIMEOUT":
+          setPause(true)
+          document.getElementById('my_modal_4').close()
+          console.log(navigate);
+          return;
+          const tme =  moment(new Date(currentTime)).format();
+          axiosClient.put(`/attendance/${_id}?attendance_time_out=${tme}`).then((d)=>{
+           console.log(d);
+          })
+         
+          break;
+        case "TIMEIN":
+          setPause(false);
+          document.getElementById('my_modal_4').close()
+        break;
+        default:
+          break;
+      }
+ }
 
 
 
@@ -132,6 +201,10 @@ function DefaultLayout() {
         ))
     }
   }
+
+  
+
+  
 
 
 
@@ -201,10 +274,10 @@ function DefaultLayout() {
               <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
                 <div className='flex  justify-center items-center gap-1'>
                 <svg className="-ml-1 h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path d="M6 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8ZM6 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-1Z" className="fill-current text-cyan-400 dark:fill-slate-600"></path>
-              <path d="M13 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V8Z" className="fill-current text-cyan-200 group-hover:text-cyan-300"></path>
-              <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
-      </svg>
+                  <path d="M6 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8ZM6 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-1Z" className="fill-current text-cyan-400 dark:fill-slate-600"></path>
+                  <path d="M13 8a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2V8Z" className="fill-current text-cyan-200 group-hover:text-cyan-300"></path>
+                  <path d="M13 15a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1Z" className="fill-current group-hover:text-sky-300"></path>
+               </svg>
 
                   <div className="text-sm breadcrumbs ">
                         <ul>
@@ -226,8 +299,51 @@ function DefaultLayout() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                   </button>
-                
-                  <div className="flex space-x-4">       
+                  {startTime  && (
+                 
+                  <div className="flex items-center gap-2">
+
+                    {choose === "LUNCH" && (
+                      <span className="font-mono text-2xl">
+                      <span >LUNCH BREAK</span>
+                    </span>
+                    )}
+
+                    {choose === "TIMEOUT" && (
+                      <span className="font-mono text-2xl">
+                      <span >TIME-OUT</span>
+                    </span>
+                    )}
+
+                    {choose === "TIMEIN" && (
+                        <>
+                        <span className="countdown font-mono text-2xl">
+                        <span style={{"--value":currentTime.toLocaleTimeString().split(':')[0]}}></span>:
+                        <span style={{"--value":currentTime.toLocaleTimeString().split(':')[1]}}></span>:
+                        <span style={{"--value":currentTime.toLocaleTimeString().split(':')[2].split(" ")[0]}}></span>
+                        </span>
+                        {currentTime.toLocaleTimeString().split(':')[2].split(" ")[1]}
+                      </>
+                    )}
+
+
+                    {!pause ? (
+                      <svg onClick={()=>document.getElementById('my_modal_4').showModal()} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-red-500 cursor-pointer transition-all ease-in">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                    ): (
+                      <svg onClick={()=>document.getElementById('my_modal_4').showModal()} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 cursor-pointer transition-all ease-in text-blue-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" />
+                      </svg>
+                    )}
+
+                  </div> 
+                  )}
+                  
+                   
+                  <div className="flex space-x-4">  
+                   
                       <div hidden className="md:block">
                           <div className="relative flex items-center  focus-within:text-[#00b894]">
                               <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
@@ -238,7 +354,7 @@ function DefaultLayout() {
                               <input type="search" name="leadingIcon" id="leadingIcon" placeholder="Search here" className="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-cyan-300 transition"/>
                           </div>
                       </div>
-                
+
                       <button aria-label="search" className="w-10 h-10 rounded-xl border bg-gray-100 focus:bg-gray-100 active:bg-gray-200 md:hidden">
                           <svg xmlns="http://ww50w3.org/2000/svg" className="w-4 mx-auto fill-current text-gray-600" viewBox="0 0 35.997 36.004">
                               <path id="Icon_awesome-search" data-name="search" d="M35.508,31.127l-7.01-7.01a1.686,1.686,0,0,0-1.2-.492H26.156a14.618,14.618,0,1,0-2.531,2.531V27.3a1.686,1.686,0,0,0,.492,1.2l7.01,7.01a1.681,1.681,0,0,0,2.384,0l1.99-1.99a1.7,1.7,0,0,0,.007-2.391Zm-20.883-7.5a9,9,0,1,1,9-9A8.995,8.995,0,0,1,14.625,23.625Z"></path>
@@ -254,24 +370,31 @@ function DefaultLayout() {
                               <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                           </svg>
                       </button>
-                      <button aria-label="notification" className="w-10 h-10 flex justify-center items-center rounded-xl border bg-gray-100 focus:bg-gray-100 active:bg-gray-200">
-                      <label className="swap swap-rotate ">
-                          <input type="checkbox" onChange={toggleTheme} checked={theme === "light" ? false : true}/>
-                         
-                            <svg className='swap-off fill-current w-6 h-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
-
-                            <svg className='swap-on fill-current w-6 h-6' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
-
-                          
-                        </label>
-                      </button>
-                    
-                    
+                
                   </div>
               </div>
           </div>
-      </div> 
+      </div>
+
       <Outlet/>
+
+   
+        
+          <dialog id="my_modal_4" className="modal">
+            <div className="modal-box">
+              <form method="dialog">
+                <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              </form>
+              <h3 className="font-bold text-lg">Reason to Pause the time:</h3>
+              <select value={choose} className="select select-bordered w-full my-3" onChange={(e)=> setChoose(e.target.value)}>
+                <option disabled>Select here</option>
+                <option value="LUNCH">Lunch-break</option>
+                <option value="TIMEOUT">Time-out</option>
+                <option value="TIMEIN">Continue</option>
+               </select>
+               <button type='button' className="btn btn-success text-white w-full" onClick={handleSubmitPauseTime}>SUBMIT</button>
+            </div>
+          </dialog>
     </div>
   )
 }

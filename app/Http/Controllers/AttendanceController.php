@@ -29,13 +29,12 @@ class AttendanceController extends Controller
     {
         //
 
-        return $request;
-        // $data = $request->validated();
-        // Attendance::create($data);
-        // return response()->json([
-        //    'message' => 'Attendance is created successfully',
-        //     'error' => $data
-        // ], 200);
+        $data = $request->validated();
+        Attendance::create($data);
+        return response()->json([
+           'message' => 'Attendance is created successfully',
+            'error' => $data
+        ], 200);
         
     }
 
@@ -50,9 +49,28 @@ class AttendanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAttendanceRequest $request, Attendance $attendance)
+    public function update(UpdateAttendanceRequest $request, string $id)
     {
         //
+        $data = $request->validated();
+     
+        $attendance = Attendance::find($id);
+        
+        if (!$attendance) {
+            return response()->json([
+                'message' => 'Attendance not found',
+            ], 404);
+        }
+ 
+        $attendance->update([
+            'attendance_time_out' => implode("+", explode(' ', $data['attendance_time_out'])), 
+        ]);
+
+
+        return response()->json([
+            'message' => 'Attendance updated successfully',
+            'attendance' => $attendance,
+        ], 200);
     }
 
     /**

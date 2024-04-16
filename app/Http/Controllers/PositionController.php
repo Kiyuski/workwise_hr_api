@@ -53,7 +53,7 @@ class PositionController extends Controller
         
         $position = Position::find($id);
 
-
+        return $request;
         if (!$position) {
             return response()->json([
                 'message' => 'Position not found',

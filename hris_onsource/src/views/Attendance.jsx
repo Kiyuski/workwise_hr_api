@@ -1,41 +1,27 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
 import axiosClient from '../axiosClient';
+import moment from 'moment';
 
 function Attendance() {
   
 
    const [attendance, setAttendanceData] = useState([]);
 
+
+
+
    useEffect(()=>{
       getListAttendance();
+     
    },[])
 
    const calculateTotalHours = (time_in, time_out) => {
-     
-      const breakTime = "1:00";
-      const timeInParts = time_in.split(':');
-      const timeOutParts =  time_out.split(':') ;
-      const breakTimeParts = breakTime.split(':');
-      
-      const startTime = new Date();
-      startTime.setHours(timeInParts[0], timeInParts[1].split(' ')[0]);
   
-      const endTime = new Date();
-      endTime.setHours(parseInt(timeOutParts[0]) % 12 + (timeOutParts[1]?.split(' ')[1].toLowerCase() === 'pm' ? 12 : 0), 
-      timeOutParts[1]?.split(' ')[0]);
-  
-  
-      const breakEndTime = new Date();
-      breakEndTime.setHours(breakTimeParts[0], breakTimeParts[1]);
-     
-      let totalMilliseconds =  endTime.getTime() - startTime.getTime();
-      totalMilliseconds -= breakTimeParts[0] * 60 * 60 * 1000;
-  
-      const totalHours = totalMilliseconds / (1000 * 60 * 60);
-      const hours = Math.floor(totalHours);
-      const minutes = Math.round((totalHours - hours) * 60);
-  
+      const diffWithoutBreak = moment.duration(moment(time_out).diff(moment(time_in)));
+      const diff = moment.duration(diffWithoutBreak.asMilliseconds() - 60 * 60 * 1000);
+      const hours = Math.floor(diff.asHours());
+      const minutes = Math.floor(diff.asMinutes()) % 60;
       return `${hours} hours ${minutes} minutes`;
   
     };
@@ -43,9 +29,14 @@ function Attendance() {
    const getListAttendance = () => {
       axiosClient.get('/attendance')
       .then(({data})=>{
+        console.log(moment(data.data[0].attendance_time_out).format('h:mm:ss a'));
+   
+
          setAttendanceData(data.data.map(d => {
             return {...d, render: calculateTotalHours(d.attendance_time_in, d.attendance_time_out)}
          }))
+
+         
    
       })
       .catch((err)=>{
@@ -89,6 +80,7 @@ function Attendance() {
                     <span className='font-bold opacity-70'>Add Attendance</span>
                   </div>
                </div>
+           
                <div className="flex flex-col mt-8">
                   <div className="overflow-x-auto rounded-lg">
                      <div className="align-middle inline-block min-w-full">
@@ -122,7 +114,7 @@ function Attendance() {
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
                                                 <div className='ml-5'>
-                                                   <span className="loading loading-ring loading-lg text-primary"></span>
+                                                    <span>No data found!</span>
                                                 </div>
                                              </td>
                                           </tr>
@@ -131,10 +123,11 @@ function Attendance() {
                                           return (
                                           <tr key={i}>
                                              <td className="p-4 whitespace-nowrap text-sm  text-gray-500 font-bold">
-                                                {at.attendance_time_in}
+                                                {moment(at.attendance_time_in).format("h:mm:ss a")}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
-                                               {at.attendance_time_out}
+                                            
+                                               {moment(at.attendance_time_out).format("h:mm:ss a")}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
                                                {at.render}

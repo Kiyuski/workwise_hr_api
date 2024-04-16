@@ -11,7 +11,7 @@ class UpdateAttendanceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,6 +23,9 @@ class UpdateAttendanceRequest extends FormRequest
     {
         return [
             //
+            'attendance_field' => 'string',
+            'attendance_time_in' => 'string',
+            'attendance_time_out' => 'string'
         ];
     }
 }
