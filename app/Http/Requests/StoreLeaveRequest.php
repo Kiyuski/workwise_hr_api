@@ -31,6 +31,8 @@ class StoreLeaveRequest extends FormRequest
             "leave_apply_date" => 'string|required',
             "leave_reason" => 'string|required',
             "leave_status" => 'string|required',
+            "employee_approval_role" => 'string|nullable',
+            "employee_approval_id" => 'string|nullable'
         ];
         
         

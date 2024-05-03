@@ -22,6 +22,7 @@ function Leave() {
   const [loadPage, setLoadPage] = useState(false);
   const [employee_data, setEmployee_data] = useState({});
   const [loadTable, setLoadTable] = useState(false);
+  const [forHRIS_head_request, setForHRIS_head_request] = useState(false)
 
 
 
@@ -360,9 +361,9 @@ const getEmployeeDetails = () => {
     let request;
     let _payload;
 
-
+    
   
-    setPayload({})
+    
     switch (tabs[tabIndex].text) {
       case 'HOLIDAYS':
 
@@ -391,16 +392,16 @@ const getEmployeeDetails = () => {
         break;
       case 'LEAVE APPLICATION':
      
-          if(!payload.leave_type){
-            alert("Please select leave type")
-            return;
-          }
-         
-          
+        
+    if(!payload.leave_type){
+      alert("Please select leave type")
+      return;
+    }
+   
        
          _payload = {
           employee_id: payload.employee_id,
-          department_id: _id ? payload.department_id : parseInt(department.id),
+          department_id: _id ? payload.department_id : department_id,
           leave_type_id: parseInt(payload.leave_type),
           leave_start_date: payload.start_date,
           leave_end_date: payload.end_date,
@@ -409,12 +410,19 @@ const getEmployeeDetails = () => {
           leave_status: _id ? payload.leave_status :  "PENDING"
          }
 
+        
+
          if(parseInt(tabsLinks[tabIndexChild].id) === 2){
           delete _payload.employee_id
           _payload.leave_status_date_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
-        }
+         }
 
-  
+         if(forHRIS_head_request){
+           _payload.employee_approval_id = payload.head_id;
+           _payload.employee_approval_role = department.find(d => d.head_id === payload.head_id).emp_role
+         }
+
+      
          request = _id ? axiosClient.put(`/leave/${_id}?${new URLSearchParams(_payload).toString()}`) : axiosClient.post('/leave', _payload);
       
 
@@ -432,17 +440,19 @@ const getEmployeeDetails = () => {
         switch (tabs[tabIndex].text) {
           case 'HOLIDAYS':
             getHoliday()
-        
+
             break;
          case 'LEAVE TYPE':
-            getLeaveType()
+ 
             break;
         case 'LEAVE APPLICATION':
+          
           if(parseInt(tabsLinks[tabIndexChild].id) === 2){
             getAllLeave('department_request', true)
           }else{
             getAllLeave('single');
           }
+      
             break;
           default:
             break;
@@ -456,6 +466,7 @@ const getEmployeeDetails = () => {
         }
     })
        setReuseDataId("")
+       setPayload({})
       document.getElementById('my_modal_5').close()
   }
   
@@ -576,7 +587,13 @@ const getEmployeeDetails = () => {
                           type: "get_hr_and_admin"
                         }
                       }) :  axiosClient.get(`/department/${department_id}`)
+
                       
+                      if(employee_data.department_head_id === employee_data.id){
+                       setForHRIS_head_request(true)
+                      }else{
+                        setForHRIS_head_request(false)
+                      }
             
                       Promise.all([
                         fetCher,
@@ -584,12 +601,16 @@ const getEmployeeDetails = () => {
                         getDataList('user')
                        ])
                         .then((data) => {
-                             console.log(data);
+                             
                              setModalLoad(false)
                              const EmpId = data[1].data.find(emp => emp.employee_email === data[2].email).id;
-                             console.log(data[0].data.data);
-                             setDepartment(data[0].data.data);
-                             setPayload({...payload,  department_head: data[0].data.data.department_status,  employee_id: EmpId});
+                             setDepartment(data[0].data.data)
+                             setPayload({...payload, department_head: data[0].data.data.department_status,  
+                              employee_id: EmpId , 
+                              hris_hr_or_admin: data[0].data.data || []
+                            });
+                            
+                             
                              getLeaveType(true) 
                          
                           })
@@ -598,7 +619,7 @@ const getEmployeeDetails = () => {
                           });
                     }
       
-                  }}>``
+                  }}>
                   <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'>
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

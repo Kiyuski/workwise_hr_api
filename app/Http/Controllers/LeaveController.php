@@ -138,20 +138,7 @@ class LeaveController extends Controller
         //
   
             $datas = $request->validated();
-            
-            $leave = Leave::where(function($query) use ($datas){
-                $query->where('leave_type_id', $datas['leave_type_id'])
-                ->where('employee_id', $datas['employee_id'])
-                ->where('leave_apply_date', $datas['leave_apply_date'])
-                ->where('leave_start_date', $datas['leave_start_date'])
-                ->where('leave_end_date', $datas['leave_end_date']);
-            })->first();
-
-            if($leave) {
-                return response()->json([
-                    'message' => 'Leave is already created please create it again',
-                    ], 422);
-            }
+   
             Leave::create($datas);
 
             return response()->json([

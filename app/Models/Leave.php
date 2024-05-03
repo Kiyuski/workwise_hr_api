@@ -22,6 +22,8 @@ class Leave extends Model
         "leave_reason",
         "leave_signature_image",
         "leave_status",
-        "leave_status_date_time"
+        "leave_status_date_time",
+        "employee_approval_role",
+        "employee_approval_id"
     ];
 }

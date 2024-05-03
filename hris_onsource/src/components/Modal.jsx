@@ -1,7 +1,8 @@
 import React from 'react'
 import moment from 'moment'
 function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id, setReuseDataId, load, childtitle}) {
-
+ 
+    
   return (
 
     <dialog id="my_modal_5" className="modal">
@@ -34,13 +35,28 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                     })}
                  </select>
              </label>
+             {payload?.hris_hr_or_admin?.length > 0 ? 
+             (
+                <>
+                <div className="label">
+                     <span className="label-text">Choose head for the approval:</span>
+                </div>
+                <select  name="head_id" value={payload.head_id || ""} className="select select-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})}>
+                    <option >Select here</option>
+                    {payload.hris_hr_or_admin.map((hr,i)=>{
+                        return <option key={i} value={hr.head_id}>{hr.employee_full_name}</option>
+                    })}
+                </select>
+                </>
+             ):(
 
-             <label className="form-control w-full">
-                 <div className="label">
-                     <span className="label-text">Department Head:</span>
-                 </div>
-                 <input type="text" value={payload.department_head || ""} name='department_head'  className="input input-bordered w-full " disabled  onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
-             </label>
+                 <label className="form-control w-full">
+                     <div className="label">
+                         <span className="label-text">Department Head:</span>
+                     </div>
+                     <input type="text" value={payload.department_head || ""} name='department_head'  className="input input-bordered w-full " disabled  onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                 </label>
+             )}
                 </>
             ):  childtitle !== "DEPARTMENT APPLICATION" && (
                 <>

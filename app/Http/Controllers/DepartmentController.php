@@ -137,7 +137,8 @@ class DepartmentController extends Controller
 
         if($request->input('type') == "get_hr_and_admin"){
             $result = Employee::query()->select(
-                'em.id',
+                'em.id as head_id',
+                'em.employee_role as emp_role',
                 DB::raw('CONCAT(de.department, "-", em.employee_name, " (", em.employee_role, ")") AS employee_full_name')
             )->from('employees as em')
             ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
