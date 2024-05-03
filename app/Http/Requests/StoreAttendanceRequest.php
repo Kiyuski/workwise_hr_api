@@ -27,11 +27,13 @@ class StoreAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => 'string|exists:employees,id',
-            'attendance_date' => 'required|date|string',
+            'employee_id' => 'required|string|exists:employees,id',
+            'attendance_date' => 'required|string|date',
             'attendance_field' => 'required|string',
-            'attendance_time_in' => 'required|string',
-            'attendance_time_out' => 'required|string|after:attendance_time_in'
+            'attendance_time_in' => 'required|date|date_format:Y-m-d H:i:s',
+            'attendance_remarks' => 'nullable|string',
+            'attendance_time_out' => 'required|date|date_format:Y-m-d H:i:s|after:attendance_time_in'
         ];
+        
     }
 }

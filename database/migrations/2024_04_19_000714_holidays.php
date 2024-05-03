@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        //
+        Schema::create('holidays', function (Blueprint $table) {
             $table->id();
-            $table->string('department', 255);
+            $table->string("holiday");
+            $table->string("holiday_start_date");
+            $table->string("holiday_end_date");
+            $table->string("holiday_year");
             $table->timestamps();
         });
     }
@@ -23,6 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        //
+        Schema::dropIfExists('holidays');
     }
 };

@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Department extends Model
+class Leave_type extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'department',
+        'leave_type',
+        'leave_number_of_days',
+        'leave_status',
     ];
 }

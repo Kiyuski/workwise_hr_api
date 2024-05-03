@@ -17,11 +17,18 @@ import Attendance from "./views/Attendance";
 import Leave from "./views/Leave";
 import Addnewattendance from "./views/Add-new-attendance";
 import Mainhero from "./views/Mainhero";
+import UpdateAttendance from "./views/Update-attendance";
+import PartNumberToArray from "./views/PartNumberToArray";
+
 
 
 
 
 const router = createBrowserRouter([
+  {
+    path: "/testing",
+    element: <PartNumberToArray />,
+  },
       {
         path: "/",
         element: <DefaultLayout />,
@@ -38,8 +45,10 @@ const router = createBrowserRouter([
           { path: "/leave", element: <Leave />},
           { path: "/reports", element: <Reports />},
           { path: "/attendance/addNewAttendance", element: <Addnewattendance />},
+          { path: "/attendance/updateNewAttendance/:id", element: <UpdateAttendance />},
           { path: "/employees/:id/update", element: <ShowUser />},
           { path: "/employees/:id", element: <UserDetails />},
+ 
       
         ]
         

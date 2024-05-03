@@ -7,64 +7,89 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers'
 import moment from 'moment';
 import DatePicker from "react-datepicker";
-import { useAuth } from '../context';
 import axiosClient from '../axiosClient';
 import dayjs from 'dayjs';
+import { useParams } from 'react-router-dom';
 
-function Addnewattendance() {
-    const {user} = useAuth();
+function UpdateAttendance() {
+    const {id} = useParams();
 
     const empRef = useRef(null);
-  
+   
     const [attendance, setAttendance] = useState({
-        attendance_time_in: moment(new Date()).format("YYYY-MM-DD HH:MM:SS"),
-        attendance_time_out: moment(new Date().setHours(new Date().getHours() + 8)).format("YYYY-MM-DD HH:MM:SS"),
+        attendance_time_in: "",
+        attendance_time_out: "",
         attendance_field: "",
         attendance_date: new Date(),
     })
   
 
+
+
     useEffect(()=>{
-       empRef.current.value = user.name || "";
-       axiosClient.get('/employee')
-      .then(({data})=>{
-       setAttendance({...attendance, employee_id: data.data.find(att => att.employee_email === user.email).id});
+      
+        Promise.all([getDataList('attendance'), getDataList('user')])
+          .then((data) => {
+
+              empRef.current.value = data[1].name || "";
+              const {attendance_time_in, attendance_time_out, attendance_field} = data[0].data.find(att => att.id === parseInt(id))
+           
+             setAttendance({
+                ...attendance,
+                attendance_time_in: attendance_time_in,
+                attendance_time_out: attendance_time_out,
+                id,
+                attendance_field
+            });
+            
+          })
+          .catch((err) => {
+              console.error(err);
+          });
+     },[])
+
+
+ 
+     const calculateTotalHours = (time_in, time_out) => {
+  
+        const diffWithoutBreak = moment.duration(moment(time_out).diff(moment(time_in)));
+        const diff = moment.duration(diffWithoutBreak.asMilliseconds() - 60 * 60 * 1000);
+        const hours = Math.floor(diff.asHours());
+        return hours < 7 ? 'UNDERTIME' : 'WORKING';
+      
     
-      })
-      .catch((err)=>{
-         const {response} = err;
-         if(response &&  response.status  === 422){
-           console.log(response.data)
-         }
-      })
-    },[])
+      };
 
     const handleSubmitAttendance = (e) => {
         e.preventDefault();  
        
-        const payload = {
-            ...attendance,
-            attendance_time_out: moment(attendance.attendance_time_out).format('YYYY-MM-DD HH:MM:SS'),
-            attendance_date: moment(attendance.attendance_date).format('L'),
-            attendance_remarks: "WORKING"
-        }
-     
-      
-        axiosClient.post('/attendance', payload)
-         .then(()=>{
-          alert("Attendance is created successfully!");
-          window.location.href = "/attendance"
-      
-         })
-         .catch((err)=>{
-            const {response} = err;
-            if(response &&  response.status  === 422){
-
-              console.log(response.data)
-            }
-         })
+       const params = new URLSearchParams({
+        ...attendance, 
+        type: "UPDATE", 
+        attendance_remarks: calculateTotalHours(attendance.attendance_time_in, attendance.attendance_time_out)
+    }).toString();
+   
+       axiosClient.put(`/attendance/${id}?${params}`)
+       .then(({data})=>{
+            alert(data.message);
+            window.location.href = "/attendance"
+       })
          
     }
+
+    
+   const getDataList = async (path) => {
+    try {
+      const res = await axiosClient.get(`/${path}`)
+      return res.data;
+    } catch (err) {
+       const {response} = err;
+       if(response &&  response.status  === 422){
+         console.log(response.data)
+       }
+    }
+ } 
+
 
 
   
@@ -94,7 +119,8 @@ function Addnewattendance() {
                             <DemoContainer components={['TimePicker']} >
                                 <TimePicker
                                 className=" w-full"
-                                defaultValue={dayjs(attendance.attendance_time_in)}
+                                defaultValue={dayjs(new Date())}
+                               value={dayjs(attendance.attendance_time_in)}
                                 onChange={(e) => setAttendance({...attendance, attendance_time_in: moment(e.$d).format()})}
                                 viewRenderers={{
                                     hours: renderTimeViewClock,
@@ -112,7 +138,8 @@ function Addnewattendance() {
                             <DemoContainer components={['TimePicker']} >
                                 <TimePicker
                                 className=" w-full"
-                               defaultValue={dayjs(attendance.attendance_time_out)}
+                                value={ dayjs(attendance.attendance_time_out)}
+                                 defaultValue={dayjs(new Date())}
                                 viewRenderers={{
                                     hours: renderTimeViewClock,
                                     minutes: renderTimeViewClock,
@@ -128,7 +155,7 @@ function Addnewattendance() {
                         <div className="label">
                             <span className="label-text">Select field of work:</span>
                         </div>
-                        <select className="select select-bordered" onChange={(e)=>  setAttendance({...attendance, attendance_field:e.target.value})}>
+                        <select value={attendance.attendance_field} className="select select-bordered" onChange={(e)=>  setAttendance({...attendance, attendance_field:e.target.value})}>
                             <option defaultValue>Select here</option>
                             <option>OFFICE</option>
                             <option>HOME</option>
@@ -151,4 +178,4 @@ function Addnewattendance() {
   )
 }
 
-export default Addnewattendance
+export default UpdateAttendance

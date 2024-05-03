@@ -9,6 +9,9 @@ use App\Http\Controllers\GithubAuthController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\LeaveTypeController;
 
 
 
@@ -21,7 +24,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
     Route::apiResource('employee', EmployeeController::class);
-    Route::get('/attendance/employee', [AttendanceController::class, 'allemployeeattendance']);
+    Route::apiResource('holiday', HolidayController::class);
+    Route::apiResource('leave_type', LeaveTypeController::class);
+
+
+    Route::get('/leave/employee/{id}', [LeaveController::class, 'allEmployeeLeave']);
+    
+    Route::apiResource('leave', LeaveController::class)->names([
+        'index' => 'leave.index',
+        'store' => 'leave.store',
+        'show' => 'leave.show',
+        'update' => 'leave.update',
+        'destroy' => 'leave.destroy',
+    ]);
+    
+
+
+    Route::get('/attendance/employee/{id}', [AttendanceController::class, 'allEmployeeAttendance']);
+
+
     Route::apiResource('attendance', AttendanceController::class)->names([
         'index' => 'attendance.index',
         'store' => 'attendance.store',

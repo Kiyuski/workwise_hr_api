@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //
         Schema::create('employees', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->unsignedBigInteger('position_id')->nullable();
             $table->unsignedBigInteger('department_id')->nullable();
             $table->foreign('department_id')->references('id')->on('departments');
             $table->foreign('position_id')->references('id')->on('positions');
+            $table->boolean("employee_set_head")->default(0);
             $table->string("employee_id");
             $table->string("employee_name");
             $table->string("employee_email");
@@ -50,6 +52,8 @@ return new class extends Migration
             $table->string("employee_end_date")->nullable();
             $table->timestamps();
         });
+
+
     }
 
     /**
@@ -57,6 +61,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        //
         Schema::dropIfExists('employees');
     }
 };

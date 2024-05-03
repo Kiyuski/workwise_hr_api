@@ -5,11 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Department extends Model
+class Holiday extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'department',
+        "holiday",
+        "holiday_start_date",
+        "holiday_end_date",
+        "holiday_year"
     ];
 }

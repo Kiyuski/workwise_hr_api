@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateAttendanceRequest extends FormRequest
+class UpdateHolidayRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,10 +23,10 @@ class UpdateAttendanceRequest extends FormRequest
     {
         return [
             //
-            'attendance_field' => 'string',
-            'attendance_time_in' => 'string',
-            'attendance_time_out' => 'string',
-            'attendance_remarks' => 'string'
+            "holiday" => "string",
+            "holiday_start_date" => "string",
+            "holiday_end_date" => "string|after:holiday_start_date",
+            "holiday_year" => "string",
         ];
     }
 }

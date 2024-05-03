@@ -23,7 +23,8 @@ class UpdateDepartmentRequest extends FormRequest
     {
         return [
             //
-            'department' => 'required'
+            'department' => 'required',
+            'employee_id' => 'string|required|exists:employees,id',
         ];
     }
 }

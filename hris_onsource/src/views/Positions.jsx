@@ -109,7 +109,7 @@ function Positions() {
           <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
                      <div className="mb-4 flex items-center justify-between">
                         <div>
-                           <span className="text-base font-normal text-gray-500">This is a list of Positions</span>
+                           <span className="text-base font-normal text-gray-500">List of Positions</span>
                         </div>
                         <div className="flex-shrink-0 flex justify-center items-center gap-3" onClick={()=>{
                            document.getElementById('my_modal_5').showModal();
@@ -146,7 +146,7 @@ function Positions() {
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
                                                 <div className='ml-5'>
-                                                   <span className="loading loading-ring loading-lg text-primary"></span>
+                                                   <span>No position found!</span>
                                                 </div>
                                              </td>
                                           </tr>
@@ -154,7 +154,7 @@ function Positions() {
                                        {positions.data && positions.data.map((pos, i)=>{
                                           return (
                                           <tr key={i}>
-                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
+                                             <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-900">
                                                 {pos.position}
                                              </td>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">

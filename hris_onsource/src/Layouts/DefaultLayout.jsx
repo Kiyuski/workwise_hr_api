@@ -8,34 +8,18 @@ import "./../App.css"
 import { googleLogout } from '@react-oauth/google';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
-import { useNavigate } from "react-router-dom";
+
 
 
 function DefaultLayout() {
-  const navigate = useNavigate();
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [targetTime, setTargetTime] = useState("");
   const [startTime, setStartTime] = useState(false);
   const [choose, setChoose] = useState("");
   const [pause, setPause] = useState(false);
   const [_id, setId] = useState("");
-  // const [theme, setTheme] = useState(localStorage.getItem("theme") ? localStorage.getItem("theme") : "light");
-
-  // useEffect(()=>{
-  //   localStorage.setItem("theme", theme);
-  //   const themeColor = localStorage.getItem("theme");
-  //   document.querySelector("html").setAttribute("data-theme", themeColor);
-  // },[theme])
-
-
-
-  // const toggleTheme = (e) => {
-  //   if(e.target.checked){
-  //     setTheme("dark")
-  //   }else{
-  //     setTheme("light");
-  //   }
-  // }
+  
   
   const location = useLocation();
   const {id} = useParams();
@@ -70,7 +54,7 @@ function DefaultLayout() {
     }, [startTime, pause]);
     
       useEffect(() => {
-      
+        
         if (targetTime && currentTime >= targetTime) {
           console.log('Reached target time!');
           clearInterval(intervalId);
@@ -89,16 +73,22 @@ function DefaultLayout() {
       getDataList('attendance'),
     ])
       .then((data) => {
+   
         setStartTime(true)
         setUser(data[0]);  
         setRole(data[1].data.find(emp => emp.employee_email === data[0].email)?.employee_role)
         setPosition(data[2].data.find(pos => pos.position_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.position_id)?.position);
-        const time = data[3].data.find(at => at.employee_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.id)?.attendance_time_out;
+
+        const attend_date = data[3].data.filter(at => at.employee_id === data[1].data.find(emp => emp.employee_email === data[0].email)?.id);
+        const time = attend_date.find(at => at.attendance_date ===  moment(new Date()).format("L"))?.attendance_time_out;
+    
         if(!time) setStartTime(false); 
         setTargetTime(new Date(time));
         setChoose("TIMEIN")
         setPause(false);
+  
         setId(data[3].data.find(at => at.attendance_date === moment(new Date()).format("L"))?.id );
+
       })
       .catch((err) => {
           console.error(err);
@@ -129,13 +119,11 @@ function DefaultLayout() {
         case "TIMEOUT":
           setPause(true)
           document.getElementById('my_modal_4').close()
-          console.log(navigate);
-          return;
           const tme =  moment(new Date(currentTime)).format();
-          axiosClient.put(`/attendance/${_id}?attendance_time_out=${tme}`).then((d)=>{
-           console.log(d);
+          axiosClient.put(`/attendance/${_id}?attendance_time_out=${tme}&attendance_remarks=LUNCH BREAK`)
+          .then(()=>{
+            window.location.reload();
           })
-         
           break;
         case "TIMEIN":
           setPause(false);
@@ -299,7 +287,17 @@ function DefaultLayout() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                   </button>
-                  {startTime  && (
+                  
+                  {/* {!startTime && (
+                     <div className="flex items-center gap-2">
+                       <span className="font-mono text-2xl">
+                       <span >TIME-OUT</span>
+                     </span>
+                   </div> 
+                  )} 
+
+
+                  {pause && startTime  && (
                  
                   <div className="flex items-center gap-2">
 
@@ -327,7 +325,7 @@ function DefaultLayout() {
                     )}
 
 
-                    {!pause ? (
+                    {!pause  ? (
                       <svg onClick={()=>document.getElementById('my_modal_4').showModal()} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-red-500 cursor-pointer transition-all ease-in">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
@@ -340,7 +338,7 @@ function DefaultLayout() {
 
                   </div> 
                   )}
-                  
+                   */}
                    
                   <div className="flex space-x-4">  
                    
@@ -395,6 +393,8 @@ function DefaultLayout() {
                <button type='button' className="btn btn-success text-white w-full" onClick={handleSubmitPauseTime}>SUBMIT</button>
             </div>
           </dialog>
+
+          
     </div>
   )
 }

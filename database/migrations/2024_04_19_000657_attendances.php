@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->string('employee_id');
             $table->foreign('employee_id')->references('id')->on('employees');
-            $table->string("attendance_time_in");
-            $table->string("attendance_time_out");
+            $table->dateTime("attendance_time_in");
+            $table->dateTime("attendance_time_out");
             $table->string("attendance_field");
             $table->string("attendance_date");
+            $table->string("attendance_remarks");
             $table->timestamps();
         });
+
     }
 
     /**
@@ -28,6 +31,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        //
         Schema::dropIfExists('attendances');
     }
 };

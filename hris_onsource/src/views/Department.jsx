@@ -1,19 +1,41 @@
 import { useEffect, useState } from "react"
 import axiosClient from "../axiosClient";
-import moment from 'moment';
 
 function Department() {
 
    const [department, setDepartment] = useState('');
+   const [employee_id, setEmployeeId] = useState('');
    const [departments, setDataDepartment] = useState([]);
    const [_id, setDepartmentId] = useState('');
+   const [empData, setEmpData] = useState([]);
+   const [show, setShow] = useState(false);
+   const [selectData, setSelectData] = useState([]);
+   const [emp_user_id, setEmp_user_id] = useState("");
+
 
    const showDepartment = (id) => {
+    
       axiosClient.get(`/department/${id}`)
       .then(({data})=>{
          document.getElementById('my_modal_5').showModal();
-         setDepartment(data.data.department);
+         setShow(true)
          setDepartmentId(data.data.id);
+         setDepartment(data.data.department);
+         if(!data.list_of_user_in_department[0].employee_name) return empData([])
+
+         console.log(data.list_of_user_in_department);
+         setEmpData(data.list_of_user_in_department.filter(d => d.user_id !== emp_user_id)
+         .map(d => {
+            return {
+               ...d,
+               employee_name: `${d.employee_name} (${d.employee_role})`
+            }
+         }))
+      
+         setEmployeeId(data.data.employee_id);  
+         console.log(data.data);
+       
+       
       })
       .catch((err)=>{
          const {response} = err;
@@ -25,8 +47,8 @@ function Department() {
 
    const deleteDepartment = (id) => {
       axiosClient.delete(`/department/${id}`)
-      .then(()=>{
-         getListDepartment();
+      .then(()=>{   
+         getListDepartment("ALL");
       })
       .catch((err)=>{
          const {response} = err;
@@ -40,15 +62,17 @@ function Department() {
       e.preventDefault();
 
       const data = {
-         department,  
+         department,
+         employee_id,
       }
-
+ 
       if(_id){
-         axiosClient.put(`/department/${_id}?department=${department}`)
-         .then(()=>{
+         axiosClient.put(`/department/${_id}?department=${department}&employee_id=${employee_id}`)
+         .then((d)=>{
+      
             alert("Department is updated successfully");
             document.getElementById('my_modal_5').close()
-            getListDepartment();
+            getListDepartment("ALL");
             setDepartmentId("");
          })
          .catch((err)=>{
@@ -62,7 +86,7 @@ function Department() {
 
       axiosClient.post('/department', data)
       .then(() => {
-         getListDepartment();
+         getListDepartment("ALL");
          document.getElementById('my_modal_5').close()
          })
       .catch((err) => {
@@ -70,12 +94,48 @@ function Department() {
          })
    }
 
-   
-   const getListDepartment = () => {
-      axiosClient.get('/department')
-      .then(({data})=>{
-         setDataDepartment(data);
+   useEffect(()=>{
+      Promise.all([getDataList('employee'), getDataList('user')])
+        .then((data) => {
+    
+            setEmp_user_id(data[0].data.find(d => d.employee_email === data[1].email)?.id);
+           
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+   },[])
+
+    
+   const getDataList = async (path, id = null) => {
+      try {
+        const res = await axiosClient.get(`/${path}`,{
+         params:{
+            data:id
+         }
+        })
       
+        return res.data;
+      } catch (err) {
+         const {response} = err;
+         if(response &&  response.status  === 422){
+           console.log(response.data)
+         }
+      }
+   } 
+
+   
+
+   const getListDepartment = (id) => {
+      axiosClient.get('/department',{
+         params: {
+            data: id 
+          }
+      })
+      .then(({data})=>{
+         console.log(data);
+         setSelectData(data.for_filter_button)
+         setDataDepartment(data.data);
       })
       .catch((err)=>{
          const {response} = err;
@@ -85,10 +145,19 @@ function Department() {
       })
    }
 
+
+
+   const filterByDepartment = (e) => {
+     getListDepartment(e.target.value, )
+   }
+
+
+
    useEffect(()=>{
-      getListDepartment();
+      getListDepartment('ALL');
    },[])
 
+  
 
   return (
     
@@ -96,7 +165,19 @@ function Department() {
           <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
                      <div className="mb-4 flex items-center justify-between">
                         <div>
-                           <span className="text-base font-normal text-gray-500">This is a list of Department</span>
+                           <label className="form-control w-full max-w-xs">
+                              <div className="label">
+                                 <span className="label-text">Filter by Department:</span>
+                              </div>
+                              <select className="select select-bordered" onChange={filterByDepartment}>
+                                 <option value='ALL'>ALL</option>
+                                 {selectData.map((de, i)=> {
+                                    return (
+                                       <option key={i} value={de.id}>{de.department}</option>
+                                    )
+                                 })}
+                              </select>
+                           </label>
                         </div>
                         <div className="flex-shrink-0 flex justify-center items-center gap-3">
                         <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'  onClick={()=>document.getElementById('my_modal_5').showModal()}>
@@ -118,7 +199,10 @@ function Department() {
                                              DEPARTMENT
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             Date & Time
+                                             EMPLOYEES
+                                          </th>
+                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                             REMARKS
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             ACTION
@@ -127,24 +211,28 @@ function Department() {
                                        </tr>
                                     </thead>
                                     <tbody className="bg-white">
-                                    {!departments.data?.length && (
+                                    {!departments.length && (
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
                                                 <div className='ml-5'>
-                                                   <span className="loading loading-ring loading-lg text-primary"></span>
+                                                   <span>No department found!</span>
                                                 </div>
                                              </td>
                                           </tr>
                                        )}
-                                       {departments.data && departments.data.map((de, i)=>{
+                                       {departments && departments.map((de, i)=>{
                                           return (
                                           <tr key={i}>
-                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900">
+                                             <td className="p-4 whitespace-nowrap text-sm font-bold uppercase text-gray-900">
                                                 {de.department}
                                              </td>
-                                             <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                               { de.created_at && moment(de.created_at).calendar()}
+                                             <td className={`p-4 whitespace-nowrap text-sm ${de.employees === "CHOOSE DEPARTMENT HEAD" || de.employees === "NO EMPLOYEE'S" ? "text-red-500  font-bold" : "text-gray-900"} `}>
+                                                {de.employees}
                                              </td>
+                                             <td className={`p-4 whitespace-nowrap text-sm ${de.remarks === "HAS EMPLOYEE" || de.remarks === "NO EMPLOYEE'S"  ? "text-red-500  font-bold" : "text-gray-900"} `}>
+                                                {de.remarks}
+                                             </td>
+                                             
                                              <td className="p-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
                                                    <div onClick={()=> deleteDepartment(de.id)}>
                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-red-600 cursor-pointer transition-all opacity-75 hover:opacity-100">
@@ -177,18 +265,45 @@ function Department() {
         <div className="modal-box">
             <h3 className="font-bold text-lg">New Department</h3>
             <form onSubmit={addDepartment} method="dialog">
-            <label className="form-control w-full ">
-            <div className="label">
-                <span className="label-text">Department name:</span>
-            </div>
-            <input value={department} onChange={(e)=> setDepartment(e.target.value)} type="text" placeholder="Input Department here" className="input input-bordered w-full"   />
-            </label>
+               <label className="form-control w-full ">
+               <div className="label">
+                  <span className="label-text">Department name:</span>
+               </div>
+               <input value={department} onChange={(e)=> setDepartment(e.target.value)} type="text" placeholder="Input Department here" className="input input-bordered w-full"   />
+               </label>
+                  {show && (
+                  <label className="form-control w-full mt-2">
+                  <div className="label">
+                     <span className="label-text">Department Head:</span>
+                  
+                  </div>
+                  <select value={employee_id || "NO EMPLOYEE TO THIS DEPARTMENT"} className="select select-bordered w-full" onChange={(e)=> setEmployeeId(e.target.value)}>
+                    
+                     {!empData.length && (
+                        <option>NO EMPLOYEE TO THIS DEPARTMENT</option>
+                         )
+                     }
+                     {empData.length > 0 &&  <option defaultChecked >Select Employee head here</option>}
+                     {empData.map((emp, i) => {
+                        
+                        return (
+                           <option key={i} value={emp.user_id}>{emp.employee_name}</option>
+                        )
+                     })}
+                  
+                  </select>
+                  </label>
+                  )}
+            
             <div className="modal-action">
                 <button type='submit' className="btn btn-success text-white w-[30%]"> { _id ? 'Submit' : 'Create'}</button>
                 <button type='button' className="btn shadow" onClick={() => {
                   setDepartment("");
                   setDepartmentId("");
                   document.getElementById('my_modal_5').close();
+                  setEmployeeId("")
+                  setShow(false)
+                  setEmpData([])
              
                 }}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>

@@ -18,8 +18,8 @@ class AttendanceController extends Controller
     public function index(Request $request)
     {
         //
-     
-        return AttendanceResource::collection(Attendance::orderBy('created_at')->get());
+        
+        return AttendanceResource::collection(Attendance::orderBy('id')->get());
     }
 
     /**
@@ -28,7 +28,7 @@ class AttendanceController extends Controller
     public function store(StoreAttendanceRequest $request)
     {
         //
-
+         
         $data = $request->validated();
         Attendance::create($data);
         return response()->json([
@@ -52,17 +52,30 @@ class AttendanceController extends Controller
     public function update(UpdateAttendanceRequest $request, string $id)
     {
         //
-        $data = $request->validated();
+        $data = $request->validated(); 
      
         $attendance = Attendance::find($id);
-        
+       
+
         if (!$attendance) {
             return response()->json([
                 'message' => 'Attendance not found',
             ], 404);
         }
+
+       
+        if($request->has('type')){
+            $attendance->update($data);
+
+            return response()->json([
+                'message' => 'Your attendance is updated successfully',
+                'attendance' => $attendance,
+            ], 200);
+        }
  
+
         $attendance->update([
+            'attendance_remarks' => $data['attendance_remarks'],
             'attendance_time_out' => implode("+", explode(' ', $data['attendance_time_out'])), 
         ]);
 
@@ -81,10 +94,24 @@ class AttendanceController extends Controller
         //
     }
 
-    public function allEmployeeAttendance()
+    public function allEmployeeAttendance(string $id)
     {
-        // Get all employees with their attendance
-       return 'hello';
+       
+        $attendance = Attendance::select(
+            'employees.employee_name as employee_name',
+            'attendances.attendance_time_in as attendance_time_in',
+            'attendances.attendance_time_out as attendance_time_out',
+            'attendances.attendance_field as attendance_field',
+            'attendances.attendance_date as attendance_date',
+            'attendances.attendance_remarks as attendance_remarks'
+        )
+        ->join('employees', 'attendances.employee_id', '=', 'employees.id')
+        ->where('attendances.employee_id', '<>' , $id)
+        ->get();
+    
+
+       return $attendance;
     }
+
 
 }

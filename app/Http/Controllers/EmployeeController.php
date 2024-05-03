@@ -29,7 +29,6 @@ class EmployeeController extends Controller
         //
    
         $datas = $request->validated();
-
         return $this->storeEmployee($request, $datas);
 
     }
@@ -75,6 +74,23 @@ class EmployeeController extends Controller
 
         
  
+    }
+
+    public function destroy(string $id)
+    {
+        //
+        $employee = Employee::find($id);
+   
+         if(!$employee){
+             return response()->json([
+                 "message" => "Employee type not found",
+             ], 422);
+         }
+ 
+         $employee->delete();
+         return response()->json([
+             'message' => 'Employee item deleted successfully'
+         ], 200);
     }
 
     
@@ -129,7 +145,7 @@ class EmployeeController extends Controller
     }
 
     private function storeEmployee($request, $datas) {
-
+   
         if($request->has('_employeeData')){
 
             foreach ($datas["_employeeData"] as $data) {
@@ -198,8 +214,15 @@ class EmployeeController extends Controller
             ], 200);
 
      
-        } else {
+        } else if($request->has('action')) {
+            $datas["id"]= IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']);
+            Employee::create($datas);
+
+            return response()->json([
+                "message" => "Employee account is created successfully.",
+            ], 200);
            
+        }else{
             Employee::create([
                 'id' => IdGenerator::generate(['table' => 'employees', 'length' => 12, 'prefix' =>'ONSOURCE-']),
                 'employee_id' => $datas['employee_id'],

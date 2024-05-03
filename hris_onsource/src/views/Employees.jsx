@@ -7,7 +7,19 @@ import moment from 'moment';
 
 
 
-const Items = ({empList, changeStatus, positions, departments}) => {
+const Items = ({empList, changeStatus, positions, departments, load}) => {
+   
+   if(load){
+      return (
+         <tr>
+         <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
+          <div className='ml-5'>
+            <span className="loading loading-ring loading-lg text-primary"></span>
+         </div>
+         </td>
+      </tr>
+      )
+   }
 
    if(empList.length){
       return empList.map((emp , i)=>{
@@ -21,18 +33,18 @@ const Items = ({empList, changeStatus, positions, departments}) => {
                     </div>
                  </div>
               </td>
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
                  {emp.employee_id}
               </td>
 
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+              <td className="p-3 whitespace-nowrap uppercase text-sm font-normal text-gray-500">
                  {emp.employee_name}
               </td>
 
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-               {departments.find(d => parseInt(d.id) === parseInt(emp.department_id))?.department}
+              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
+               {departments.find(d => parseInt(d.id) === parseInt(emp.department_id))?.department}{departments.find(d => d.employee_id === emp.id)?.remarks && " / "}<span className="text-red-500 opacity-70">{departments.find(d => d.employee_id === emp.id)?.remarks}</span>
               </td>
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
+              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
                  {positions.find(p => parseInt(p.position_id) === parseInt(emp.position_id))?.position}
               </td>
               <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
@@ -82,14 +94,6 @@ const Items = ({empList, changeStatus, positions, departments}) => {
           </td>
        </tr>
       )
-   }else{
-      <tr>
-      <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-       <div className='ml-5'>
-         <span className="loading loading-ring loading-lg text-primary"></span>
-      </div>
-      </td>
-   </tr>
    }
 }
  
@@ -102,8 +106,8 @@ function Employees() {
    const refGen = useRef(null);
    const refStat = useRef(null);
    const refChoose = useRef(null);
-  
-   
+   const [load, setLoading] = useState(true);
+   const [check, setCheck] = useState(false)
    const [startDate, setStartDate] = useState(new Date());
    const [_endDate, setEndDate] = useState(new Date());
    const [department, setDepartment] = useState([]);
@@ -111,6 +115,7 @@ function Employees() {
    const [empList, setEmployeeList] = useState([]);
    const [_id, setEmpId] = useState("");
    const [reason, setReason] = useState("");
+   const [userData, setUserData] = useState({})
    const [payload, setPayload] = useState({
       employee_id: "",
       employee_image: "",
@@ -133,11 +138,13 @@ function Employees() {
 
 
    useEffect(()=>{
-      Promise.all([getDataList('position'), getDataList('department'), getDataList('user')])
+      Promise.all([getDataList('position'), getDataList('department', 'ALL'), getDataList('user')])
         .then((data) => {
             setPosition(data[0].data);
             setDepartment(data[1].data);
             getAllEmployees(data[2]);
+            setUserData(data[2]);
+           
         })
         .catch((err) => {
             console.error(err);
@@ -145,6 +152,24 @@ function Employees() {
    },[])
 
     
+   const getDataList = async (path, id = null) => {
+      try {
+        const res = await axiosClient.get(`/${path}`,{
+         params:{
+            data:id
+         }
+        })
+      
+        return res.data;
+      } catch (err) {
+         const {response} = err;
+         if(response &&  response.status  === 422){
+           console.log(response.data)
+         }
+      }
+   } 
+
+  
    
 
    const changeStatus = (value, id, startDate, currentEndDate) => {
@@ -200,11 +225,16 @@ function Employees() {
    }
   
    const getAllEmployees = async (user = null) => {
-   
+      setLoading(true)
       try {
          const res = await axiosClient.get('/employee')
-       
+         const set = res.data.data.filter(c => c.employee_role === 'HR' || c.employee_role === 'ADMIN')?.length > 0 ? true: false;
+         setLoading(false);
+        
+         setCheck(set);
          setEmployeeList(res.data.data.filter(r => r.employee_email !== user.email));
+    
+      
       
 
        } catch (err) {
@@ -223,7 +253,7 @@ function Employees() {
       if(payload.employee_image_url){
          payload.employee_image = payload.employee_image_url;
       }
-
+ 
       if(_id){
 
          if(!payload.employee_image_url){
@@ -252,7 +282,7 @@ function Employees() {
          .then(()=>{
             refChoose.current.value = "";
             alert("Employee updated successfully");
-            getAllEmployees(department, position);
+            getAllEmployees(userData);
             setPayload({
                employee_image: "",
                employee_gender: "",
@@ -282,29 +312,20 @@ function Employees() {
     
       delete payload.employee_image_url
      
-      axiosClient.post('/employee', {...payload, employee_start_date:moment(startDate).format('L'), 
+      axiosClient.post('/employee', {...payload, 
+         employee_start_date:moment(startDate).format('L'), 
       employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') ? null : moment(_endDate).format('L'),
-      action:"Employee"
+      action:"Employee",
+      department_id: parseInt(payload.department_id),
+      position_id: parseInt(payload.position_id)
       }).then((d)=>{
-         alert("Employee is created successfully");
-         getAllEmployees(department, position);
+         console.log(d);
+         // alert("Employee is created successfully");
+         getAllEmployees(userData);
       })
    }
 
 
-   const getDataList = async (path) => {
-      try {
-        const res = await axiosClient.get(`/${path}`)
-        return res.data;
-      } catch (err) {
-         const {response} = err;
-         if(response &&  response.status  === 422){
-           console.log(response.data)
-         }
-      }
-   } 
-
-  
 
    
   
@@ -393,7 +414,7 @@ function Employees() {
                                     </thead>
                                     <tbody>
                                      
-                                    <Items empList = {empList} changeStatus={changeStatus} positions = {position} departments={department}/>         
+                                    <Items empList = {empList} changeStatus={changeStatus} positions = {position} departments={department} load={load}/>         
                                     </tbody>
                                  </table>
                               </div>
@@ -507,9 +528,13 @@ function Employees() {
                   <span className="label-text">Role</span>
                </div>
                <select ref={refRole} className="select select-bordered" onChange={(e)=> setPayload({...payload, employee_role: e.target.value})}>
-                  <option  defaultValue>Select here</option>
-                  <option value="HR">HR</option>
-                  <option value="ADMIN">ADMIN</option>
+                  <option defaultValue>Select here</option>
+                  {!check && (
+                    <>
+                     <option value="HR">HR</option>
+                     <option value="ADMIN">ADMIN</option>
+                    </>    
+                  )}
                   <option value="EMPLOYEE">EMPLOYEE</option>
                </select>
             </label>

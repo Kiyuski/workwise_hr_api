@@ -13,6 +13,7 @@ class Attendance extends Model
         'employee_id',
         'attendance_date',
         'attendance_field',
+        'attendance_remarks',
         'attendance_time_in',
         'attendance_time_out',
     ];
