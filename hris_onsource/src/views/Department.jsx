@@ -10,8 +10,54 @@ function Department() {
    const [empData, setEmpData] = useState([]);
    const [show, setShow] = useState(false);
    const [selectData, setSelectData] = useState([]);
-   const [emp_user_id, setEmp_user_id] = useState("");
+   const [emp_de_id, setEmp_user_de_id] = useState("");
+   const [choose, setChoose] = useState("")
+   const [pagination, setPagination] = useState([]);
+   const [search, setSearch] = useState("");
+   const [checkboxState, setCheckboxState] = useState([]);
+   const [checkHead, setCheckboxHead] = useState(false);
 
+
+   const handleCheckboxChange = (e) => {
+      setCheckboxHead(false)
+      const checkboxId = e.target.id;
+      const isChecked = e.target.checked;
+    
+      if (isChecked) {
+       setCheckboxState(prevIds => [...prevIds, {id: checkboxId}]);
+       } else {
+       setCheckboxState(prevIds => prevIds?.filter(d => parseInt(d.id) !== parseInt(checkboxId)));
+       }
+ 
+  };
+
+
+
+ const handleCheckAll  = (e) => {
+    setCheckboxHead(prev => !prev)
+    if(e.target.checked){
+       setCheckboxState(departments.map(d => {
+          return {id: d.id}
+       }))
+    }else{
+       setCheckboxState([]);
+    }
+
+ }
+
+
+
+
+   const handleSearchPosition = (e) => {
+      setSearch(e.target.value)
+  
+
+      if(e.target.value){
+         getListDepartment(choose,null, e.target.value)
+      }else{
+         getListDepartment(choose)
+      }
+   }
 
    const showDepartment = (id) => {
     
@@ -22,18 +68,18 @@ function Department() {
          setDepartmentId(data.data.id);
          setDepartment(data.data.department);
          if(!data.list_of_user_in_department[0].employee_name) return empData([])
-
-         console.log(data.list_of_user_in_department);
-         setEmpData(data.list_of_user_in_department.filter(d => d.user_id !== emp_user_id)
+         setEmpData(data.list_of_user_in_department
          .map(d => {
             return {
                ...d,
                employee_name: `${d.employee_name} (${d.employee_role})`
             }
          }))
-      
+
+
          setEmployeeId(data.data.employee_id);  
-         console.log(data.data);
+
+    
        
        
       })
@@ -45,17 +91,28 @@ function Department() {
       })
    }
 
-   const deleteDepartment = (id) => {
-      axiosClient.delete(`/department/${id}`)
-      .then(()=>{   
-         getListDepartment("ALL");
-      })
-      .catch((err)=>{
-         const {response} = err;
-         if(response &&  response.status  === 422){
-           console.log(response.data)
-         }
-      })
+   const deleteDepartment = () => {
+  
+      if (confirm('Are you sure you want to delete this department into the database?')) {
+         axiosClient.delete(`/department/delete`,{
+            data: checkboxState
+          })
+          .then(()=>{
+                getListDepartment("ALL");
+               setCheckboxState([])
+           
+          })
+          .catch((err)=>{
+             const {response} = err;
+             if(response &&  response.status  === 422){
+               console.log(response.data)
+             }
+          })
+       } else {
+         setCheckboxState([])
+         setCheckboxHead(false)
+         console.log('Department is not deleted in database.');
+       }
    }
 
    const addDepartment = (e) => {
@@ -68,7 +125,7 @@ function Department() {
  
       if(_id){
          axiosClient.put(`/department/${_id}?department=${department}&employee_id=${employee_id}`)
-         .then((d)=>{
+         .then(()=>{
       
             alert("Department is updated successfully");
             document.getElementById('my_modal_5').close()
@@ -98,8 +155,8 @@ function Department() {
       Promise.all([getDataList('employee'), getDataList('user')])
         .then((data) => {
     
-            setEmp_user_id(data[0].data.find(d => d.employee_email === data[1].email)?.id);
-           
+         setEmp_user_de_id(data[0].data.find(d => d.employee_email === data[1].email)?.department_id);
+ 
         })
         .catch((err) => {
             console.error(err);
@@ -114,7 +171,7 @@ function Department() {
             data:id
          }
         })
-      
+       
         return res.data;
       } catch (err) {
          const {response} = err;
@@ -124,18 +181,29 @@ function Department() {
       }
    } 
 
+   const handleUrlPaginate = (url) => {
+      if(url){
+         getListDepartment(choose,`?${url.split("?")[1]}`);
+      }
+      
+   }
    
 
-   const getListDepartment = (id) => {
-      axiosClient.get('/department',{
+   const getListDepartment = (id, path = null, srch = null) => {
+      axiosClient.get(`/department${path ? path : ""}`,{
          params: {
-            data: id 
+            data: id,
+            search: srch, 
           }
       })
       .then(({data})=>{
-         console.log(data);
+     
          setSelectData(data.for_filter_button)
-         setDataDepartment(data.data);
+         setDataDepartment(data.data.data);
+         setPagination(data.data.links)
+   
+        
+   
       })
       .catch((err)=>{
          const {response} = err;
@@ -148,13 +216,15 @@ function Department() {
 
 
    const filterByDepartment = (e) => {
-     getListDepartment(e.target.value, )
+     getListDepartment(e.target.value)
+     setChoose(e.target.value)
    }
 
 
 
    useEffect(()=>{
       getListDepartment('ALL');
+      setChoose("ALL")
    },[])
 
   
@@ -164,10 +234,11 @@ function Department() {
       <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
           <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
                      <div className="mb-4 flex items-center justify-between">
-                        <div>
-                           <label className="form-control w-full max-w-xs">
+                        <div className="flex items-center w-full gap-4">
+                       
+                           <label className="form-control  max-w-xs">
                               <div className="label">
-                                 <span className="label-text">Filter by Department:</span>
+                                 <span className="label-text font-semibold">Filter by Department:</span>
                               </div>
                               <select className="select select-bordered" onChange={filterByDepartment}>
                                  <option value='ALL'>ALL</option>
@@ -178,7 +249,23 @@ function Department() {
                                  })}
                               </select>
                            </label>
+                       
+                        <div className="relative flex gap-2 items-center mt-8 focus-within:text-[#00b894] w-96">
+                                 <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
+                                 <svg xmlns="http://ww50w3.org/2000/svg" className="w-4 fill-current" viewBox="0 0 35.997 36.004">
+                                    <path id="Icon_awesome-search" data-name="search" d="M35.508,31.127l-7.01-7.01a1.686,1.686,0,0,0-1.2-.492H26.156a14.618,14.618,0,1,0-2.531,2.531V27.3a1.686,1.686,0,0,0,.492,1.2l7.01,7.01a1.681,1.681,0,0,0,2.384,0l1.99-1.99a1.7,1.7,0,0,0,.007-2.391Zm-20.883-7.5a9,9,0,1,1,9-9A8.995,8.995,0,0,1,14.625,23.625Z"></path>
+                                 </svg>
+                                 </span>
+                                 <input type="search" name="leadingIcon" id="leadingIcon" value={search} placeholder="Search department or employee name here" onChange={handleSearchPosition}  className="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-[#00b894] transition"/>
+                                
+                           </div>
+                           {checkboxState.length > 0 && (
+                                    <button className="btn  text-white btn-sm mt-8  btn-error" onClick={deleteDepartment}>
+                                       {checkboxState.length > 1? "Delete all": "Delete"}
+                                       </button>
+                                 )}
                         </div>
+                       
                         <div className="flex-shrink-0 flex justify-center items-center gap-3">
                         <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'  onClick={()=>document.getElementById('my_modal_5').showModal()}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -192,54 +279,80 @@ function Department() {
                         <div className="overflow-x-auto rounded-lg">
                            <div className="align-middle inline-block min-w-full">
                               <div className="shadow overflow-hidden sm:rounded-lg">
-                                 <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                 <div className="overflow-x-auto">
+                                 <table className="table">
+                                    {/* head */}
+                                    <thead>
                                        <tr>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             DEPARTMENT
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             EMPLOYEES
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             REMARKS
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ACTION
-                                          </th>
-                                        
+                                          {choose === "ALL" && (
+                                       <th>
+                                          <label>
+                                             <input type="checkbox" className="checkbox" checked={checkHead} value={checkHead}   onChange={handleCheckAll}/>
+                                          </label>
+                                       </th>
+                                          )}
+                                       <th>Department</th>
+                                       <th>Employees</th>
+                                       <th>Remarks</th>
+                                       <th>Action</th>
                                        </tr>
                                     </thead>
-                                    <tbody className="bg-white">
+                                    <tbody>
                                     {!departments.length && (
                                           <tr>
                                              <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
                                                 <div className='ml-5'>
-                                                   <span>No department found!</span>
+                                                   <span>{choose === "ALL" ? "No department found!" : "No employee found!"}</span>
                                                 </div>
                                              </td>
                                           </tr>
                                        )}
                                        {departments && departments.map((de, i)=>{
                                           return (
-                                          <tr key={i}>
-                                             <td className="p-4 whitespace-nowrap text-sm font-bold uppercase text-gray-900">
-                                                {de.department}
+                                             <tr key={i}>
+                                             {choose === "ALL" && (
+                                             <td>
+                                                
+                                                <label>
+                                                   <input type="checkbox" id={de.id}  checked={checkboxState.some(d => parseInt(d.id) === parseInt(de.id))}  className="checkbox" onChange={handleCheckboxChange} />
+                                                </label>
+                                            
                                              </td>
-                                             <td className={`p-4 whitespace-nowrap text-sm ${de.employees === "CHOOSE DEPARTMENT HEAD" || de.employees === "NO EMPLOYEE'S" ? "text-red-500  font-bold" : "text-gray-900"} `}>
-                                                {de.employees}
-                                             </td>
-                                             <td className={`p-4 whitespace-nowrap text-sm ${de.remarks === "HAS EMPLOYEE" || de.remarks === "NO EMPLOYEE'S"  ? "text-red-500  font-bold" : "text-gray-900"} `}>
-                                                {de.remarks}
-                                             </td>
-                                             
-                                             <td className="p-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
-                                                   <div onClick={()=> deleteDepartment(de.id)}>
-                                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-red-600 cursor-pointer transition-all opacity-75 hover:opacity-100">
-                                                      <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                   </svg>
+                                                 )}
+                                             <td className="font-bold">{de.department}</td>
+                                             <td>
+                                                <div className="flex items-center gap-3">
+                                                   {de.position === "CHOOSE DEPARTMENT HEAD" || de.position === "NO EMPLOYEE'S" ? (
+                                                      <>
+                                                      </>
+                                                   ): (
+                                                      <div className="avatar">
+                                                      <div className="mask mask-squircle w-12 h-12">
+                                                         <img src={de.employee_image? de.employee_image : "https://img.daisyui.com/tailwind-css-component-profile-2@56w.png"} alt="Avatar Tailwind CSS Component" />
+                                                      </div>
+                                                      </div>
+                                                   )}
+                                                   
+                                                   <div>
+                                                   <div className={`font-bold`}>{de.employee_name}</div>
+                                                   <div className={`text-sm opacity-50 ${de.position === "CHOOSE DEPARTMENT HEAD" || de.position === "NO EMPLOYEE'S" ? "text-red-500" : "text-gray-900"} `}>{de.position}</div>
                                                    </div>
-                                                   <span>/</span>
+                                                </div>
+                                             </td>
+                                            
+                                          
+                                             <td>
+                                                 {choose === "ALL" && de.total_employees > 0 && (
+                                                   <>
+                                                  <span className=" opacity-80 text-sm ">{de.total_employees > 0 ?  `${emp_de_id === de.id && "You and" || `There ${de.total_employees > 1 ? " are ":" is "}`} ${emp_de_id === de.id ? de.total_employees - 1 : de.total_employees} employee${de.total_employees > 1 ? "'s" : ""} on this department`: "Add new employees now"}</span> 
+                                                  <br/>
+                                                   </>
+                                                 )}
+                                              
+                                                <span className={`${de.remarks === "HAS EMPLOYEE" || de.remarks === "NO EMPLOYEE'S"  ? "text-red-500  font-bold" : "text-blue-900"} ${de.total_employees !== undefined && "mt-2"} badge font-bold badge-ghost badge-sm`}>{de.remarks}</span>
+                                             </td>
+                                             <td className="p-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex gap-2">
+                                                   
                                                    <div onClick={()=> showDepartment(de.id)}>
                                                    <svg  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-[#0984e3] cursor-pointer transition-all opacity-75 hover:opacity-100">
                                                       <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
@@ -247,18 +360,29 @@ function Department() {
                                                    </div>
                                                  
                                              </td>
-                                          </tr>
-                                   
+                                             </tr>
+                                           
                                           )
                                        })}
-                                       
-                                       
+                                     
                                     </tbody>
+                                  
                                  </table>
+                                 </div>
+
                               </div>
                            </div>
                         </div>
                      </div>
+
+                     <div className="join w-full justify-end mt-6">
+                  {pagination.length > 0  && pagination.map((p, i) => {
+                        return (
+                           <button key={i} disabled={p.url ? false:true}   className={`join-item btn ${p.active ? "btn-active bg-[#00b894] text-white  hover:bg-[#00b894]" : ""} `}   dangerouslySetInnerHTML={{ __html: p.label }} onClick={()=> handleUrlPaginate(p.url)}></button>
+                        )
+                  })}
+
+                  </div>
             </div>
 
             <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle">

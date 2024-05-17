@@ -4,19 +4,15 @@ export const ComponentShowHeader = ({ind, chilIn}) => {
       case 1:
         return (
           <tr>
-          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">
             LEAVE TYPE
           </th>
-          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            NUMBER OF DAYS
-          </th>
-          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">
             STATUS
           </th>
-          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">
             ACTION
           </th>
-        
        </tr>
         )
 
@@ -26,16 +22,10 @@ export const ComponentShowHeader = ({ind, chilIn}) => {
             return (
               <tr>
                 <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  EMPLOYEE ID #
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                   NAME
+                  EMPLOYEE NAME
                 </th>
                 <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   LEAVE TYPE
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  APPLY DATE
                 </th>
                 <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   START DATE
@@ -59,48 +49,40 @@ export const ComponentShowHeader = ({ind, chilIn}) => {
         }else if(chilIn === 1){
             return (
                 <tr>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  LEAVE TYPE
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  APPLY DATE
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  START DATE
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  END DATE
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  DURATION
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  STATUS
-                </th>
-                <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ACTION
-                </th>
-              
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    PERSON TO APPROVED
+                  </th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    LEAVE TYPE
+                  </th>
+
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    START DATE
+                  </th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    END DATE
+                  </th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    DURATION
+                  </th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ACTION
+                  </th>
              </tr>
               )
         }else{
           return (
             <tr>
-              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                DEPARTMENT
+              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">
+                EMPLOYEE NAME
               </th>
-              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                EMPLOYEE ID #
-              </th>
-              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                 NAME
+              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">
+                DEPARTMENT & POSITION
               </th>
               <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 LEAVE TYPE
               </th>
-              <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                APPLY DATE
-              </th>
+
               <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 START DATE
               </th>
@@ -123,27 +105,14 @@ export const ComponentShowHeader = ({ind, chilIn}) => {
          
       default:
         return (
-            <tr>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              HOLIDAY NAME
-            </th>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-               START DATE
-            </th>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              END DATE
-            </th>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              DAYS
-            </th>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              YEAR
-            </th>
-            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              ACTION
-            </th>
+             <tr>
+               <th className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">Holiday</th>
+               <th className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">End date</th>
+               <th className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">Days</th>
+               <th className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">Year</th>
+               <th className="p-4 text-left text-xs font-medium text-gray-500  tracking-wider">Action</th>
+             </tr>
           
-         </tr>
           )
       
     }

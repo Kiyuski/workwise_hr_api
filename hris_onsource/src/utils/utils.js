@@ -19,7 +19,7 @@ const tabs = [
   ]
     const tabsLinks = [
       {
-        text: "EMPLOYEE'S APPLICATION",
+        text: "HEAD'S APPLICATION",
         id:0
       },
       {

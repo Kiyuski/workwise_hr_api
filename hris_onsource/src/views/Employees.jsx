@@ -7,6 +7,7 @@ import moment from 'moment';
 
 
 
+
 const Items = ({empList, changeStatus, positions, departments, load}) => {
    
    if(load){
@@ -22,45 +23,42 @@ const Items = ({empList, changeStatus, positions, departments, load}) => {
    }
 
    if(empList.length){
-      return empList.map((emp , i)=>{
-        
-            return (
-              <tr key={i}>
-              <td className="p-3">
-                 <div className="avatar">
-                    <div className="w-8 rounded">
-                       <img src={`${emp.employee_image || "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`} alt="Tailwind-CSS-Avatar-component" />
-                    </div>
-                 </div>
-              </td>
-              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
-                 {emp.employee_id}
-              </td>
-
-              <td className="p-3 whitespace-nowrap uppercase text-sm font-normal text-gray-500">
-                 {emp.employee_name}
-              </td>
-
-              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
-               {departments.find(d => parseInt(d.id) === parseInt(emp.department_id))?.department}{departments.find(d => d.employee_id === emp.id)?.remarks && " / "}<span className="text-red-500 opacity-70">{departments.find(d => d.employee_id === emp.id)?.remarks}</span>
-              </td>
-              <td className="p-3 whitespace-nowrap text-sm font-bold text-gray-500">
-                 {positions.find(p => parseInt(p.position_id) === parseInt(emp.position_id))?.position}
-              </td>
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                 {emp.employee_start_date}
-              </td>
-              <td className={`p-3 whitespace-nowrap text-sm  text-gray-500 ${emp.employee_end_date === null ? "text-green-700 font-bold uppercase" : "font-normal"}`}>
-                 {emp.employee_end_date || "Ongoing"}
-              </td>
-              <td className="p-3 whitespace-nowrap text-sm font-normal text-gray-500">
-                 {moment(emp.created_at).calendar()}
-              </td>
-              <td className={`p-3 whitespace-nowrap text-sm font-bold uppercase`}>
+      return empList.map((emp , i)=> (
+            
+           <tr key={i}>                   
+               <td>
+                  <div className="flex items-center gap-3">
+                     <div className="avatar">
+                        <div className="mask mask-squircle w-12 h-12">
+                           <img src={`${emp.employee_image || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`} alt="Avatar Tailwind CSS Component" />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold">{emp.employee_name}</div>
+                        <div className="text-sm opacity-50">{emp.employee_id}</div>
+                     </div>
+                  </div>
+               </td>
+               <td>
+                 
+                  <span className="font-semibold opacity-85"> {departments.find(d => parseInt(d.id) === parseInt(emp.department_id))?.department} - {positions.find(p => parseInt(p.position_id) === parseInt(emp.position_id))?.position} </span>
+                  <br/>
+                  <span className="badge badge-ghost badge-sm"><span className="text-red-500 opacity-70">{departments.find(d => d.employee_id === emp.id)?.remarks || emp.employee_role} </span></span>
+               </td>
+               <td>
+                   {emp.employee_start_date}
+               </td>
+               <td>
+                  <span className={`p-3 badge badge-ghost badge-sm whitespace-nowrap text-sm  text-gray-500 ${emp.employee_end_date === null ? "text-green-700 font-bold uppercase" : "font-semibold text-red-500"}`}> {emp.employee_end_date || "Ongoing"}</span>
+               </td>
+               <td>
+                   {moment(emp.created_at).calendar()}
+               </td>
+               <td className={`p-3 whitespace-nowrap text-sm font-bold uppercase`}>
                     <select value={emp.employee_status} className={`${emp.employee_status === "Active" ? "text-blue-700" : "text-red-700"} select select-bordered select-sm w-28 opacity-90`} onChange={(e)=> {
                        changeStatus(e.target.value, emp.id, emp.employee_start_date, emp.employee_end_date)
                     }}>
-                       <option disabled defaultValue>Select here</option>
+                       <option  defaultValue>Select here</option>
                        <option value="Active">ACTIVE</option>
                        <option value="Inactive">INACTIVE</option>
                     </select>
@@ -79,9 +77,10 @@ const Items = ({empList, changeStatus, positions, departments, load}) => {
                     </svg>
                     </Link> 
               </td>
-           </tr>
+            </tr>                      
+        
             )
-      })
+      )
       
    }else if (!empList.length) {
       return (
@@ -112,6 +111,7 @@ function Employees() {
    const [_endDate, setEndDate] = useState(new Date());
    const [department, setDepartment] = useState([]);
    const [position, setPosition] = useState([]);
+   const [allRole, setRoles] = useState([]);
    const [empList, setEmployeeList] = useState([]);
    const [_id, setEmpId] = useState("");
    const [reason, setReason] = useState("");
@@ -132,19 +132,33 @@ function Employees() {
       employee_end_date: "",
       employee_status: "Active",
    });
+   const [pagination, setPagination] = useState([]);
+   const [search, setSearch] = useState("");
 
 
 
 
 
    useEffect(()=>{
-      Promise.all([getDataList('position'), getDataList('department', 'ALL'), getDataList('user')])
+      Promise.all([getDataList('position'), getDataList('department', 'ALL'), getDataList('user'), getDataList('employee')])
         .then((data) => {
             setPosition(data[0].data);
-            setDepartment(data[1].data);
+            setDepartment(data[1].data.data);
             getAllEmployees(data[2]);
             setUserData(data[2]);
-           
+
+            const roles = Array.from(new Set(data[3].data.map(r => r.employee_role)));
+
+            let allRoles = ['EMPLOYEE', 'HR', 'ADMIN'];
+            
+            roles.forEach(al => {
+                if (al.trim() === "HR" || al.trim() === "ADMIN") {
+                    allRoles = allRoles.filter(r => r !== al.trim());
+                }
+            });
+            
+            setRoles(allRoles);
+
         })
         .catch((err) => {
             console.error(err);
@@ -156,7 +170,8 @@ function Employees() {
       try {
         const res = await axiosClient.get(`/${path}`,{
          params:{
-            data:id
+            data:id,
+            all:true
          }
         })
       
@@ -169,32 +184,42 @@ function Employees() {
       }
    } 
 
+
+
   
    
 
-   const changeStatus = (value, id, startDate, currentEndDate) => {
+   const changeStatus = (value, id,  currentEndDate) => {
+     
+      if(value === "Active"){
+         handleSubmitStatus(null, id, value)
+         return;
+      }
+      setEmpId(id)
+      setPayload({...payload, employee_status: value, employee_end_date:currentEndDate})
       document.getElementById('my_modal_3').showModal()
-      setPayload({...payload, employee_status: value, employee_start_date: startDate, employee_end_date:currentEndDate})
-      setEmpId(id);
    }
 
-   const handleSubmitStatus = () => {
-      
-      const startdate = moment(payload.employee_start_date).format('L');
+
+   
+   const handleSubmitStatus = (e, id=null, status = null) => {
+   
       const enddate = moment(_endDate).format('L')
-      const startDateSeconds = moment(startDate).unix();
+
+   
+      const startDateSeconds = moment(payload.employee_start_date).unix();
       const endDateSeconds = moment(_endDate).unix();
+  
      
-      if (startDateSeconds === endDateSeconds && !payload.employee_end_date) {
+      if (startDateSeconds === endDateSeconds && !payload.employee_end_date && payload.employee_status !== "Active") {
           alert("The employee reason for leaving field must be a date after the employee start date.");
           return;
       }
-     
-            axiosClient.put(`/employee/${_id}`, {
-               employee_status: payload.employee_status,
+           console.log(status ? status : payload.employee_status);
+            axiosClient.put(`/employee/${id ? id : _id}`, {
+               employee_status: status ? status : payload.employee_status,
                employee_reason_for_leaving:reason,
-               employee_start_date: moment(payload.employee_start_date).format('L') || "",
-               employee_end_date: startdate === enddate ? "" : enddate,
+               employee_end_date: status === "Active" ? "" : enddate,
                action: "Employee",
             }, {
                headers: {
@@ -204,7 +229,7 @@ function Employees() {
             .then(()=>{
                alert("Status is updated successfully!");
                document.getElementById('my_modal_3').close()
-               getAllEmployees();
+               getAllEmployees(userData);
                setPayload({
                   ...payload,
                   employee_status:"",
@@ -224,15 +249,22 @@ function Employees() {
             })
    }
   
-   const getAllEmployees = async (user = null) => {
+   const getAllEmployees = async (user = null, path = null, srch = null) => {
       setLoading(true)
+ 
       try {
-         const res = await axiosClient.get('/employee')
+         const res = await axiosClient.get(`/employee${path ? path : ""}`,{
+            params:{
+               search: srch,
+            }
+         })
          const set = res.data.data.filter(c => c.employee_role === 'HR' || c.employee_role === 'ADMIN')?.length > 0 ? true: false;
          setLoading(false);
-        
          setCheck(set);
          setEmployeeList(res.data.data.filter(r => r.employee_email !== user.email));
+         setPagination(res.data.meta.links);
+     
+       
     
       
       
@@ -246,7 +278,7 @@ function Employees() {
    }
 
 
-   
+
 
    const handleSubmitEmployee = () => {
      
@@ -265,7 +297,7 @@ function Employees() {
          delete payload.employee_image_url;
        
          const params = {...payload, employee_start_date:moment(startDate).format('L'), 
-         employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') && payload.employee_status === "Active" ? "" : moment(_endDate).format('L'),
+         employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') && payload.employee_status === "Active" ? "" : moment(new Date(_endDate)).format('L'),
          }
 
          const config = {
@@ -311,27 +343,36 @@ function Employees() {
 
     
       delete payload.employee_image_url
+      delete payload.employee_email
+   
      
       axiosClient.post('/employee', {...payload, 
-         employee_start_date:moment(startDate).format('L'), 
+      employee_start_date:moment(startDate).format('L'), 
       employee_end_date:moment(startDate).format('L') === moment(_endDate).format('L') ? null : moment(_endDate).format('L'),
       action:"Employee",
       department_id: parseInt(payload.department_id),
       position_id: parseInt(payload.position_id)
-      }).then((d)=>{
-         console.log(d);
-         // alert("Employee is created successfully");
+      }).then(()=>{
          getAllEmployees(userData);
       })
    }
 
+   const handleSearchPosition = (e) => {
+      setSearch(e.target.value)
 
+      if(e.target.value){
+         getAllEmployees(userData, null, e.target.value)
+      }else{
+         getAllEmployees(userData)
+      }
+   }
 
-   
-  
-   
-  
-
+   const handleUrlPaginate = (url) => {
+      if(url){
+         getAllEmployees(userData, `?${url.split("?")[1]}`)
+      }
+      
+   }
 
 
   return (
@@ -340,7 +381,7 @@ function Employees() {
         <div  className=" shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5 z-0">
        
                      <div className="mb-4 flex items-center justify-between">
-                
+                        <div className="flex gap-4 w-[50%]">
                         <div className="flex-shrink-0 flex justify-center items-center gap-3" >
                            
                            <Link to="/employees/add-excel" className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'>
@@ -350,6 +391,18 @@ function Employees() {
                            </Link>
                              <span className='font-bold opacity-70'> VIA ( EXCEL )</span>
                            </div>
+
+                           <div className="relative flex gap-2 items-center  focus-within:text-[#00b894] w-full">
+                                 <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
+                                 <svg xmlns="http://ww50w3.org/2000/svg" className="w-4 fill-current" viewBox="0 0 35.997 36.004">
+                                    <path id="Icon_awesome-search" data-name="search" d="M35.508,31.127l-7.01-7.01a1.686,1.686,0,0,0-1.2-.492H26.156a14.618,14.618,0,1,0-2.531,2.531V27.3a1.686,1.686,0,0,0,.492,1.2l7.01,7.01a1.681,1.681,0,0,0,2.384,0l1.99-1.99a1.7,1.7,0,0,0,.007-2.391Zm-20.883-7.5a9,9,0,1,1,9-9A8.995,8.995,0,0,1,14.625,23.625Z"></path>
+                                 </svg>
+                                 </span>
+                                 <input type="search" value={search || ""} name="leadingIcon" id="leadingIcon" placeholder="Search employee name , position , employee id or email here"  onChange={handleSearchPosition} className="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-[#00b894] transition"/>
+                                
+                           </div>
+                        </div>
+                          
                         
                         <div className="flex-shrink-0 flex justify-center items-center gap-3" >
                            
@@ -371,55 +424,44 @@ function Employees() {
                         <div className="overflow-x-auto rounded-lg z-0">
                            <div className="align-middle inline-block min-w-full z-0">
                               <div className="shadow overflow-hidden sm:rounded-lg z-0 relative">
-                                 <table className="min-w-full divide-y divide-gray-200 z-0">
-                                    <thead className="">
-                                       <tr>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             IMAGE
-                                          </th>
 
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             EMPLOYEE ID#
-                                          </th>
 
-   
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             EMPLOYEE NAME
-                                          </th>
-
-                                   
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             DEPARTMENT
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             POSITION
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             START DATE
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             END DATE
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             CREATED AT
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            STATUS
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            ACTION
-                                          </th>
-                                        
-                                       </tr>
-                                    </thead>
-                                    <tbody>
-                                     
+                                 <div className="overflow-x-auto">
+                                    <table className="table">
+                                 
+                                       <thead>
+                                          <tr>
+                                          <th>Employee name</th>
+                                          <th>Department</th>
+                                          <th>Start date</th>
+                                          <th>End date</th>
+                                          <th>Created at</th>
+                                          <th>Status</th>
+                                          <th>Action</th>
+                                          </tr>
+                                       </thead>
+                                       <tbody>
                                     <Items empList = {empList} changeStatus={changeStatus} positions = {position} departments={department} load={load}/>         
-                                    </tbody>
-                                 </table>
+                                       </tbody>
+                                      
+                                       
+                                    </table>
+
+                  
+                             
                               </div>
+                              </div>
+                             
                            </div>
                         </div>
+                        <div className="join w-full justify-end mt-6">
+                  {pagination.length > 0  && pagination.map((p, i) => {
+                        return (
+                           <button key={i} disabled={p.url ? false:true}   className={`join-item btn ${p.active ? "btn-active bg-[#00b894] text-white  hover:bg-[#00b894]" : ""} `}   dangerouslySetInnerHTML={{ __html: p.label }} onClick={()=> handleUrlPaginate(p.url)}></button>
+                        )
+                  })}
+
+                  </div>
                      </div>
         </div>
 
@@ -456,7 +498,7 @@ function Employees() {
             <form  method="dialog">
             <div className="avatar mt-5 w-full flex-col flex justify-center items-center gap-3">
                <div className="w-24 rounded-full ring ring-[#00b894] ring-offset-base-100 ring-offset-2">
-                  <img  src={payload.employee_image ? typeof payload.employee_image === "object" ? URL.createObjectURL(payload.employee_image) : payload.employee_image  : "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
+                  <img  src={payload.employee_image ? typeof payload.employee_image === "object" ? URL.createObjectURL(payload.employee_image) : payload.employee_image  : "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
                  
                </div>
                <input ref={refChoose} type="file"  className="file-input file-input-bordered w-full mt-2" onChange={(e)=>{
@@ -480,10 +522,7 @@ function Employees() {
                Address
                <input value={payload.employee_address} type="text" className="grow" placeholder="i.g address"  onChange={(e)=> setPayload({...payload, employee_address: e.target.value })}/>
             </label>
-            <label className="input input-bordered mt-2 flex items-center gap-2">
-               Email
-               <input value={payload.employee_email} type="email" className="grow" placeholder="i.g email"  onChange={(e)=> setPayload({...payload, employee_email: e.target.value })}/>
-            </label>
+
             <label className="input input-bordered mt-2 flex items-center gap-2">
                Contact#:
                <input value={payload.employee_phone} type="number" className="grow" placeholder="i.g 0969*****" onChange={(e)=> setPayload({...payload, employee_phone: e.target.value })} />
@@ -529,13 +568,11 @@ function Employees() {
                </div>
                <select ref={refRole} className="select select-bordered" onChange={(e)=> setPayload({...payload, employee_role: e.target.value})}>
                   <option defaultValue>Select here</option>
-                  {!check && (
-                    <>
-                     <option value="HR">HR</option>
-                     <option value="ADMIN">ADMIN</option>
-                    </>    
-                  )}
-                  <option value="EMPLOYEE">EMPLOYEE</option>
+                  {allRole && allRole.map(r => {
+                     return (
+                        <option value={r} key={r}>{r}</option>
+                     )
+                  })}
                </select>
             </label>
 
@@ -588,7 +625,6 @@ function Employees() {
             <label className="form-control">
                   <h3 className="font-bold text-lg">Reason for leaving</h3>
                   <span className="label-text opacity-70 my-2">(Leave empty if the employee still active)</span>
-        
                   <textarea onChange={(e)=>setReason(e.target.value)} className="textarea textarea-bordered h-24 w-full" placeholder="Input here the reason why the employee is leaving the company?"></textarea>
                   <label className="opacity-70 text-sm mt-2">
                      Select employee end-date:

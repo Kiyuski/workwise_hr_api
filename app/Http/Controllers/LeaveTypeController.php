@@ -6,16 +6,28 @@ use App\Models\Leave_type;
 use App\Http\Requests\StoreLeave_typeRequest;
 use App\Http\Requests\UpdateLeave_typeRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class LeaveTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
-        return Leave_type::query()->orderBy('created_at', 'desc')->get();
+        $searchKeyword = $request->input('search');
+
+        $ltype = Leave_type::query()
+            ->when($searchKeyword, function ($query) use ($searchKeyword) {
+                return $query->where('leave_types.leave_type', 'like', '%' . $searchKeyword . '%');
+            })
+            ->orderBy('created_at', 'desc');
+        
+       
+        return $request->has("all_type") ? $ltype->get() : $ltype->paginate(10)->appends(['search' => $searchKeyword]);;
+        
+       
     }
 
     /**

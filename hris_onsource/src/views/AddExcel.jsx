@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as XLSX from 'xlsx/xlsx.mjs';
 import axiosClient from '../axiosClient';
 import moment from 'moment';
-import { Navigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 function AddExcel() {
   const xlRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -10,7 +10,8 @@ function AddExcel() {
   const [position, setPosition] = useState([]);
   const [_UIemployeeData, _setUIemployeeData] = useState([]);
   const [_employeeData, _setemployeeData] = useState([]);
-
+  const navigate =  useNavigate();
+  
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     const allowedExtensions = ["xls", "xlsx"];
@@ -29,7 +30,7 @@ function AddExcel() {
   
 
   const handleUploadToDatabase = () => {
-  
+
    axiosClient.post('/employee', {
       _employeeData,
       action: "Employee"
@@ -37,10 +38,43 @@ function AddExcel() {
       _setUIemployeeData("");
       _setemployeeData("");
       alert("File is added to Database succesfully!");
-      Navigate("/employees")
+      navigate("/employees")
   })
    
   };
+
+  const handleDepartmentChange = (e, rowIndex) => {
+   const { value } = e.target;
+   _setUIemployeeData(prevData => {
+       const updatedData = [...prevData];
+       updatedData[rowIndex] = { ...updatedData[rowIndex], department_Id: parseInt(value) };
+       return updatedData;
+   });
+
+   _setemployeeData(prevData => {
+      const empData = [...prevData];
+      empData[rowIndex] = {...empData[rowIndex], department_id: parseInt(value)}
+      return empData;
+   })
+   
+};
+
+
+const handlePositionChange = (e, rowIndex) => {
+   const { value } = e.target;
+   _setUIemployeeData(prevData => {
+       const updatedData = [...prevData];
+       updatedData[rowIndex] = { ...updatedData[rowIndex], position_Id: parseInt(value)};
+       return updatedData;
+   });
+   _setemployeeData(prevData => {
+      const empData = [...prevData];
+      empData[rowIndex] = {...empData[rowIndex], position_id: parseInt(value)}
+      return empData;
+   })
+};
+
+
 
   const parseExcelFile = () => {
 
@@ -65,8 +99,7 @@ function AddExcel() {
          const daysSinceExcelStart = parseInt(inputDate, 10);
          return moment(new Date(excelStartDate.getTime() + (daysSinceExcelStart * 24 * 60 * 60 * 1000))).format('MM/DD/YYYY') || null;
       }
-      
-
+   
    
       parsedData.map(data => {
        
@@ -74,11 +107,8 @@ function AddExcel() {
             employee_name: data.Employee,
             employee_address: data.Address,
             employee_contact: data.Contact,
-            employee_email: data.Email,
             employee_role: data.Role,
             employee_gender: data.Gender,
-            department_id: department.find(d => d.department.toLowerCase() === data.Department.toLowerCase()).id || null,
-            position_id: position.find(d => d.position.toLowerCase() === data.Position.toLowerCase()).position_id || null,
             employee_status: calcDate(data.End_date) === "Invalid date" ? "Active" : "Inactive",
             employee_id: data.Employee_id,
             employee_start_date: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
@@ -88,16 +118,14 @@ function AddExcel() {
           
 
          empData.push({
+          employee_id: data.Employee_id,
           employee: data.Employee,
-          email: data.Email,
           address: data.Address,
           contact: data.Contact,
           role: data.Role,
           gender: data.Gender,
           startDate: calcDate(data.Start_date) === "Invalid date" ? null : calcDate(data.Start_date),
           endDate:calcDate(data.End_date) === "Invalid date" ? null : calcDate(data.End_date),
-          department: data.Department,
-          position: data.Position,
           status: data.End_date ? "Inactive" : "Active",
        })
 
@@ -115,7 +143,9 @@ function AddExcel() {
       Promise.all([getDataList('position'), getDataList('department')])
         .then((data) => {
             setPosition(data[0].data);
-            setDepartment(data[1].data);
+            setDepartment(data[1].data.data);
+           
+           
         })
         .catch((err) => {
             console.error(err);
@@ -125,7 +155,11 @@ function AddExcel() {
 
   const getDataList = async (path) => {
       try {
-        const res = await axiosClient.get(`/${path}`)
+        const res = await axiosClient.get(`/${path}`, path === "department" && {
+         params: {
+            data:"ALL"
+         }
+        })
         return res.data;
       } catch (err) {
         const {response} = err;
@@ -163,20 +197,14 @@ function AddExcel() {
                         <div className="overflow-x-auto rounded-lg">
                            <div className="align-middle inline-block min-w-full">
                               <div className="shadow overflow-hidden sm:rounded-lg">
-                                 <table className="min-w-full divide-y divide-gray-200">
+                                 <table className="min-w-full divide-y divide-gray-200 table">
                                     <thead className="bg-gray-50">
                                        <tr>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              EMPLOYEE NAME
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             EMAIL
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             ADDRESS
-                                          </th>
-                                          <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             CONTACT #
+                                             ADDRESS & CONTACT #
                                           </th>
                                            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              GENDER
@@ -206,41 +234,48 @@ function AddExcel() {
                                           </td>
                                         </tr>
                                     )}
-                                    {_UIemployeeData?.map((emp, i)=>{
+                                    {_UIemployeeData.length > 1 && _UIemployeeData?.map((emp, i)=>{
                                           return (
-                                            <tr key={i.toString()}>
-                                            <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900 capitalize">
-                                               {emp.employee}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                               {emp.email}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                               {emp.address}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-500">
-                                               {emp.contact}
-                                            </td>
-                                             <td className="p-4 whitespace-nowrap text-sm  text-gray-500 ">
-                                               {emp.gender === "M" ? "Male" : "Female"}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm  text-gray-500 font-bold">
-                                               {emp.department}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
-                                               {emp.position}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
-                                               {emp.startDate}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-sm font-bold text-gray-500">
-                                               {emp.endDate}
-                                            </td>
-                                            <td className={`p-4 whitespace-nowrap text-sm ${emp.status === "Inactive" ? "text-red-700" : "text-blue-700"}  font-bold`}>
-                                             {emp.status}
-                                            </td>
-                                           
-                                         </tr>
+                                                <tr key={i}>
+                                                <td>
+                                                <div className="flex items-center gap-3">
+                                                   <div>
+                                                      <div className="font-bold"> {emp.employee}</div>
+                                                      <div className="text-sm opacity-50">{emp.employee_id}</div>
+                                                   </div>
+                                                </div>
+                                                </td>
+                                                <td>
+                                                {emp.contact}
+                                                <br/>
+                                                <span className="badge badge-ghost badge-sm">{emp.address}</span>
+                                                </td>
+                                                <td>
+                                                   <span className={`${emp.gender === "M" ? "text-blue-500": "text-pink-700"} font-bold uppercase`}>{emp.gender === "M" ? "Male" : "Female"}</span>
+                                                </td>
+                                                <td>
+                                                   <select onChange={(e)=> handleDepartmentChange(e, i)} value={emp.department_Id || ""}  className="select select-bordered">
+                                                      <option  defaultValue>Select here</option>
+                                                      {department.map((de)=>{
+                                                         return <option key={de.id} value={de.id}>{de.department}</option>
+                                                      })}
+                                                   
+                                                   </select>
+                                                </td>
+                                                <td>
+                                                   <select onChange={(e)=> handlePositionChange(e, i)} value={emp.position_Id || ""} className="select select-bordered">
+                                                      <option defaultValue>Select here</option>
+                                                      {position.map((pos)=>{
+                                                         return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option>
+                                                      })}
+                                                   </select>
+                                                </td>
+                                                <td className="font-semibold">{emp.startDate}</td>
+                                                <td className={`whitespace-nowrap text-sm font-bold ${!emp.endDate ? "text-blue-500": "text-slate-500"}`}>{emp.endDate || "ONGOING"}</td>
+                                                   <td >
+                                                      <span className={` ${emp.status === "Inactive" ? "text-red-700" : "text-blue-700"} uppercase font-semibold badge badge-ghost badge-sm`}>{emp.status}</span>
+                                                   </td>
+                                                </tr>
                                           );
                                          })}
                                       

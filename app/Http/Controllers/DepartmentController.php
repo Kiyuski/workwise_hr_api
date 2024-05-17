@@ -19,6 +19,7 @@ class DepartmentController extends Controller
     {  
       
         $id = $request->input('data');
+        $searchKeyword = $request->input('search');
 
         $forFilterButton = DB::table(DB::raw('(SELECT
             de.id as id,
@@ -44,10 +45,14 @@ class DepartmentController extends Controller
                 $query->select(
                     'de.id as id',
                     'de.department as department',
+                    'em.employee_image as employee_image',
+                    DB::raw('CASE WHEN em.employee_set_head = 1 THEN  em.employee_name 
+                    ELSE NULL END AS employee_name'),
+                    DB::raw('COUNT(em.id) OVER(PARTITION BY de.department) as total_employees'),
                     DB::raw('CASE WHEN em.employee_set_head = 1 THEN em.id ELSE "NO ID" END AS employee_id'),
-                    DB::raw('CASE WHEN em.employee_set_head = 1 THEN CONCAT(p.position, " - ", em.employee_name) 
+                    DB::raw('CASE WHEN em.employee_set_head = 1 THEN  p.position
                         WHEN em.employee_set_head = 0 THEN "CHOOSE DEPARTMENT HEAD" 
-                        ELSE "NO EMPLOYEE\'S" END AS employees'),
+                        ELSE "NO EMPLOYEE\'S" END AS position'),
                     DB::raw('CASE WHEN em.employee_set_head = 1 THEN "DEPARTMENT HEAD" 
                         WHEN em.employee_set_head = 0 THEN "HAS EMPLOYEE" 
                         ELSE "NO EMPLOYEE\'S" END AS remarks'),
@@ -58,11 +63,15 @@ class DepartmentController extends Controller
                 $query->select(
                     'de.id as id',
                     'de.department as department',
+                    'em.employee_image as employee_image',
+                    DB::raw('COUNT(em.id) OVER(PARTITION BY de.department) as total_employees'),
+                    DB::raw('CASE WHEN em.employee_name is not null THEN em.employee_name
+                        ELSE NULL END AS employee_name'),
+                    DB::raw('CASE WHEN em.employee_name is not null THEN p.position
+                        ELSE "NO EMPLOYEE\'S" END AS position'),
                     DB::raw('CASE WHEN em.id is not null THEN em.id 
                         WHEN em.id is null THEN "NO EMPLOYEE\'S"
                         ELSE "HAS EMPLOYEE" END AS employee_id'),
-                    DB::raw('CASE WHEN em.employee_name is not null THEN CONCAT(p.position, " - ", em.employee_name) 
-                        ELSE "NO EMPLOYEE\'S" END AS employees'),
                     DB::raw('CASE WHEN em.employee_set_head = 1 THEN "DEPARTMENT HEAD" 
                         WHEN em.employee_set_head = 0 THEN "EMPLOYEE"
                         ELSE "NO EMPLOYEE\'S" END AS remarks'),
@@ -80,11 +89,26 @@ class DepartmentController extends Controller
         ->when($id === "ALL", function ($query) {
             $query->groupBy('e.department');
         })
+        ->when($searchKeyword, function ($query) use ($searchKeyword) {
+            return $query->where('e.department', 'like', '%' . $searchKeyword . '%')
+                         ->orWhere('e.employee_name', 'like', '%' . $searchKeyword . '%');
+        })
         ->orderBy("id", "desc");
+       
+      
+        if($request->has("allDepartment")){
+            $queryData = $queryData->get();
+        }else{
+            $queryData = $queryData->paginate(5)->appends(['search' => $searchKeyword]);
+        }
+
+        foreach ($queryData as $qrData) {
+            $qrData->employee_image = $qrData->employee_image ? \URL::to($qrData->employee_image) : null;
+        };
         
    
         return response()->json([
-            'data' =>  $queryData->get(),
+            'data' =>  $queryData,
             'for_filter_button' => $forFilterButton
         ], 200);
         
@@ -113,7 +137,7 @@ class DepartmentController extends Controller
     public function show(string $id, Request $request)
     {
         //
-        $result;
+        $result = null;
 
         $listOfDepartmentUser = Department::query()
         ->select(
@@ -217,12 +241,14 @@ class DepartmentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
         //
-        $department = Department::find($id);
-
-        if(!$department){
+        $data = $request->all();
+      
+        $departments = Department::whereIn('id', $data)->get();
+       
+        if(!$departments){
             return response()->json([
                 "message" => "Department not found",
             ], 401);
@@ -234,19 +260,33 @@ class DepartmentController extends Controller
         )
         ->from('departments as de')
         ->rightJoin('employees as em', 'de.id', '=' , 'em.department_id')
-        ->where('de.id', $department->id)
+        ->whereIn('de.id', $data)
         ->first();
+
         
         if($count->exist > 0){
             return response()->json([
-                "message" => "Department is has already an employees you can't deleted it",
+                "message" => "Some department you choose has already an employees you can't deleted it",
             ], 422);
         }
 
-        $department->delete();
-
+        $deleted = Department::destroy($data);
+        
+        if ($deleted === 0) {
+            return response()->json([
+                'message' => 'No department found to delete'
+            ], 404);
+        }
+        
+     
         return response()->json([
-            'message' => 'Department deleted successfully'
+            'message' => 'Department selected deleted successfully'
         ], 200);
+
+
+
+        
+
+       
     }
 }

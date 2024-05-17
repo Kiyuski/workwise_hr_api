@@ -20,6 +20,7 @@ function ShowUser() {
   const {id} =  useParams();
   const [startDate, setStartDate] = useState(new Date());
   const [loader, setloader] = useState(false);
+  const [allrole, setRole] = useState([])
   const [empData, setEmpData] = useState({
     employee_id: id,
     employee_position: [],
@@ -233,13 +234,27 @@ function ShowUser() {
 
   useEffect(()=>{
    setloader(true);
-    Promise.all([getDataList('position'), getDataList('department')])
+    Promise.all([getDataList('position'), getDataList('department'), getDataList('employee')])
       .then((dt) => {
-    
+        
         axiosClient.get(`/employee/${id}`)
         .then(({data : {data}})=>{
           setloader(false);
-   
+
+          const roles = Array.from(new Set(dt[2].data.map(r => r.employee_role)));
+
+          let allRoles = ['EMPLOYEE', 'HR', 'ADMIN'];
+          
+          roles.forEach(al => {
+              if (al.trim() === "HR" || al.trim() === "ADMIN") {
+                  allRoles = allRoles.filter(r => r !== al.trim());
+              }
+          });
+          
+          setRole(allRoles);
+          
+          
+         
           setEmpData({...empData,
             employee_provincial_address: data.employee_provincial_address ,
             employee_birthdate: data.employee_birthdate,
@@ -257,19 +272,26 @@ function ShowUser() {
             employee_tin: data.employee_tin,
             employee_address:data.employee_address,
             employee_position:dt[0].data,
+            employee_department:dt[1].data.data,
             employee_name: data?.employee_name,
             employee_start_date: data?.employee_start_date,
-            employee_email: data?.employee_email,
+            employee_gender:data?.employee_gender,
+            employee_age:data?.employee_age,
+            employee_height:data?.employee_height,
+            employee_weight:data?.employee_weight,
+            employee_email: !data.employee_email  ? "" : data.employee_email,
+            employee_id:data?.employee_id,
+            employee_role: data?.employee_role,
             employee_dependent: !data.employee_dependents.length ? empData.employee_dependent : data.employee_dependents,
             employee_educational_background: !data.employee_educational_background.length ? empData.employee_educational_background : data?.employee_educational_background,
             employee_history: !data.employee_employment_history.length ? empData.employee_history : data?.employee_employment_history ,
             employee_reference: !data.employee_character_reference.length ? empData.employee_reference : data?.employee_character_reference,
             employee_image: data?.employee_image, 
-            position_id:data?.position_id,   
+            position_id:data?.position_id,  
+            department_id:data?.department_id,
             employee_person_to_notify: empData.employee_position || data?.employee_person_to_notify,
           })
-          
-          
+
          
           setStartDate(data.employee_start_date);
         })
@@ -285,8 +307,16 @@ function ShowUser() {
 
 
   const getDataList = async (path) => {
+
+ 
+
     try {
-      const res = await axiosClient.get(`/${path}`)
+      const res = await axiosClient.get(`/${path}`, {
+        params:{
+          data:"ALL",
+          all:true,
+        }
+      })
       return res.data;
     } catch (err) {
       const {response} = err;
@@ -305,12 +335,20 @@ function ShowUser() {
     }
 
     if(empData.employee_position){
-      empData.position_id = empData.position_id;
       delete empData.employee_position
     }
+    if(empData.employee_department){
+      delete empData.employee_department
+    }
+
   
     const params = {
       ...empData,
+      employee_birthdate: empData.employee_birthdate ? empData.employee_birthdate : "",
+      employee_date_birth: empData.employee_date_birth ? empData.employee_date_birth :"",
+      employee_age:parseInt(empData.employee_age) || "",
+      employee_height:parseFloat(empData?.employee_height) || "",
+      employee_weight:parseFloat(empData?.employee_weight) || "",
       employee_educational_background: JSON.stringify(empData.employee_educational_background),
       employee_dependents: JSON.stringify(empData.employee_dependent.filter(de => de.name || de.relationship || de.age)),
       employee_employment_history: JSON.stringify(empData.employee_history.filter(de => de.company || de.position || de.salary || de.length_of_service || de.reason_for_leaving)),
@@ -318,16 +356,15 @@ function ShowUser() {
       employee_person_to_notify: JSON.stringify(empData.employee_case_emergency),
       action: 'Employee_update_data'
     };
-
     
-    
+ 
     const config = {
       headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
       }
       };
 
-      
+ 
       const queryString = new URLSearchParams(params).toString();
       axiosClient.put(`/employee/${id}`, queryString, config)
       .then((d)=>{
@@ -360,7 +397,7 @@ function ShowUser() {
   <div className='flex items-center gap-5 mt-9'>
   <div className="avatar ">
       <div className="w-24 rounded-full ring ring-[#00b894] ring-offset-base-100 ring-offset-2">
-        <img src={empData.employee_image ? typeof empData.employee_image === "object" ? URL.createObjectURL(empData.employee_image) : empData.employee_image  : "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
+        <img src={empData.employee_image ? typeof empData.employee_image === "object" ? URL.createObjectURL(empData.employee_image) : empData.employee_image  : "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
       </div>
   </div>
   <div className="flex-shrink-0 flex gap-3" >
@@ -382,7 +419,7 @@ function ShowUser() {
         <label className="form-control w-full">
          <select value={empData.position_id} className="select select-bordered" onChange={(e)=> setEmpData({...empData, position_id: e.target.value})}>
             <option disabled defaultValue>Select here</option>
-            {empData.employee_position.map((pos)=>{
+            {empData.employee_position && empData.employee_position.map((pos)=>{
                return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option>
             })}
          </select>
@@ -401,7 +438,7 @@ function ShowUser() {
         <div className="label">
           <span className="label-text">Email Address:</span>
         </div>
-        <input type="email" autoComplete='none' value={empData.employee_email} placeholder="i.g email" className="input input-bordered w-full" onChange={(e)=> setEmpData({...empData, employee_email: e.target.value})} />   
+        <input type="email" autoComplete='none' disabled={!empData.employee_email } value={empData.employee_email} placeholder="i.g email" className="input input-bordered w-full" onChange={(e)=> setEmpData({...empData, employee_email: e.target.value})} />   
     </label>
     <label className="form-control w-full  mt-2">
       <div className="label">
@@ -440,9 +477,39 @@ function ShowUser() {
   <div>
   <label className="form-control w-full mt-2">
       <div className="label">
+        <span className="label-text">Employee ID:</span>
+      </div>
+      <input type="text" value={empData.employee_id || ""} placeholder="i.g employee_id" className="input input-bordered w-full " onChange={(e)=> setEmpData({...empData, employee_id: e.target.value})} />   
+  </label>
+  <label className="form-control w-full mt-2">
+      <div className="label">
         <span className="label-text">Name:</span>
       </div>
-      <input type="text" value={empData.employee_name} placeholder="i.g fullname" className="input input-bordered w-full " onChange={(e)=> setEmpData({...empData, employee_name: e.target.value})} />   
+      <input type="text" value={empData.employee_name || ""} placeholder="i.g fullname" className="input input-bordered w-full " onChange={(e)=> setEmpData({...empData, employee_name: e.target.value})} />   
+  </label>
+  <label className="form-control w-full  mt-2">
+      <div className="label">
+        <span className="label-text">Employee role</span>
+      </div>
+      <select value={empData.employee_role || ""} className="select select-bordered" onChange={(e)=> setEmpData({...empData, employee_role:e.target.value})}>
+                  <option  defaultValue>Select here</option>
+                  {allrole && allrole.map(r => {
+                    return (
+                      <option key={r} value={r}>{r}</option>
+                    )
+                  })}
+      </select>   
+  </label>
+  <label className="form-control w-full  mt-2">
+      <div className="label">
+        <span className="label-text">Department</span>
+      </div>
+      <select value={empData.department_id} className="select select-bordered" onChange={(e)=> setEmpData({...empData, department_id: e.target.value})}>
+            <option disabled defaultValue>Select here</option>
+            {empData.employee_department && empData.employee_department.map((de)=>{
+               return <option key={de.id} value={de.id}>{de.department}</option>
+            })}
+         </select>  
   </label>
   <label className="form-control w-full mt-2">
       <div className="label">
@@ -466,13 +533,44 @@ function ShowUser() {
         <div className="label">
           <span className="label-text">Birth Date:</span>
         </div>
-        <DatePicker  className="input input-bordered flex items-center gap-2 w-full" selected={empData.employee_birthdate}  onChange={(date)=> setEmpData({...empData, employee_birthdate:date}) } />
+        <DatePicker  className="input input-bordered flex items-center gap-2 w-full"  selected={empData?.employee_birthdate}  onChange={(date)=> setEmpData({...empData, employee_birthdate:date}) } />
     </label>
     <label className="form-control w-full  mt-2">
       <div className="label">
         <span className="label-text">Birth Place:</span>
       </div>
       <input type="text" value={empData.employee_birth_place}  placeholder="i.g birthplace" className="input input-bordered w-full" onChange={(e) => setEmpData({...empData, employee_birth_place:e.target.value})} />   
+  </label>
+  </div>
+
+  <div className='flex gap-5'>
+    <label className="form-control w-full mt-2">
+        <div className="label">
+          <span className="label-text">Age</span>
+        </div>
+        <input type="text" value={empData.employee_age || ""}  placeholder="i.g age" className="input input-bordered w-full" onChange={(e) => setEmpData({...empData, employee_age:e.target.value})} /> 
+    </label>
+    <label className="form-control w-full  mt-2">
+      <div className="label">
+        <span className="label-text">Sex</span>
+      </div>
+      <select value={empData.employee_gender || ""} className="select select-bordered" onChange={(e)=> setEmpData({...empData, employee_gender:e.target.value})}>
+                  <option  defaultValue>Select here</option>
+                  <option value="M">MALE</option>
+                  <option value="F">FEMALE</option>
+      </select>   
+  </label>
+  <label className="form-control w-full  mt-2">
+      <div className="label">
+        <span className="label-text">Weight</span>
+      </div>
+      <input type="number" value={empData.employee_weight || ""}  placeholder="i.g weight" className="input input-bordered w-full" onChange={(e) => setEmpData({...empData, employee_weight:e.target.value})} />   
+  </label>
+  <label className="form-control w-full  mt-2">
+      <div className="label">
+        <span className="label-text">Height</span>
+      </div>
+      <input type="number" value={empData.employee_height || ""}  placeholder="i.g height" className="input input-bordered w-full" onChange={(e) => setEmpData({...empData, employee_height:e.target.value})} />   
   </label>
   </div>
 

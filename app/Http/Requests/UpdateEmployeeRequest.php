@@ -35,23 +35,28 @@ class UpdateEmployeeRequest extends FormRequest
                     'employee_gender' => 'string|max:255',
                     'employee_role' => 'max:255|string',
                     'employee_image' => 'string|nullable',
-                    'employee_status' => 'string',
+                    'employee_status' => 'required',
                     'department_id' => 'numeric',
                     'position_id' => 'numeric',
                     'employee_start_date' => 'string|nullable',
                     'employee_reason_for_leaving' => 'string|nullable',
                     'employee_end_date' => 'string|nullable',
+                    'employee_age' => 'numeric|nullable',
+                    'employee_height' => 'nullable',
+                    'employee_weight' => 'nullable',
                 ];
 
             break;
             case 'Employee_update_data':
+            case 'Employee_set_account':
                     $rules;
             break;
+          
+        break;
             default:
             break;
         }
         $rules['action'] = 'string';
-
         return $rules;
     }
 }

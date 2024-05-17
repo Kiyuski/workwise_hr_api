@@ -3,12 +3,12 @@ import axiosClient from "../axiosClient";
 import DatePicker from "react-datepicker";
 import { useAuth } from "../context";
 import moment from "moment";
+import { Link } from "react-router-dom";
 
 
 function Dashboard() {
     
 
-    const {user} = useAuth();
     const [empRole, setRole] = useState("");
 
     const [userData, setUserData] = useState({
@@ -19,51 +19,132 @@ function Dashboard() {
         employee_role: "",
         employee_start_date: new Date(),
      })
-
+     const [totalEmployee, setTotalEmployee] = useState([])
+     const [pendingLeave, setPendingLeave] = useState([]);
+     const [totalNotifications, setTotalNotifications] = useState([])
      const [load, setLoading] = useState(false);
-
+  
     useEffect(()=>{
-      
-        setLoading(true);
-        axiosClient.get("/employee")
-        .then(({data: {data}}) => {
-            if(!data.length){
+       
+        setLoading(true)
+        Promise.all(
+            [
+                axiosClient.get("/employee", {
+                   params:{
+                    all:true
+                   }
+                }),
+                axiosClient.get("/user"),
+                axiosClient.get("leave",{
+                    params: {
+                        type: 'all_pending_leave'
+                    }
+                }),
+                axiosClient.get("/notification")
+            ]
+        ).then(res => {
+
+            const role_of_employee = res[0].data.data.find(d => d.employee_email === res[1].data.email)?.employee_role
+            const employee_id = res[0].data.data.find(d => d.employee_email === res[1].data.email)?.id
+
+           
+            setTotalEmployee(res[0].data.data);
+            setPendingLeave(res[2].data.data)
+            if(!res[0].data.data.length){
                 setLoading(false);
                 setRole("FIRTS_USER");
                 return;
             }
-            setLoading(true);
-            axiosClient.get("/user")
-            .then((res) => {
+            setRole(role_of_employee || 'NOT_EMPLOYEED')
+            const fetchNotif = role_of_employee === "HR" || role_of_employee === "ADMIN" ? axiosClient.get("/notification", {
+                params: {
+                    for_admin_hr: true,
+                    all:true
+                }
+            }) : axiosClient.get("/notification", {
+                params: {
+                    for_employee_only:true,
+                    id: employee_id,
+                    all:true
+                }
+            });
+
+ 
+            fetchNotif.then(rs => {
+
                 setLoading(false);
-                setRole(data.find(d => d.employee_email === res.data.email)?.employee_role || 'NOT_EMPLOYEED')
+                setTotalNotifications(rs.data.data);
             })
+         
+           
+            
         })
     
       },[])
 
       const handleSetAccount = (e) => {
         e.preventDefault();
-        const payload = {
-            employee_id: userData.employee_id,
-            employee_name: userData.employee_name,
-            employee_email: userData.employee_email,
-            employee_role: userData.employee_role,
-            employee_start_date: moment(userData.employee_start_date).format('L'),
-            employee_status: 'Active',
-            type:'setAccount',
-        }
-   
+
+       const check = totalEmployee.filter(e => e.employee_role === "HR" || e.employee_role === "ADMIN")
+
+       if(!check){
         
-        axiosClient.post("/employee", payload)
-       .then(({data}) => {
-        alert(data.message);
-        window.location.href = '/dashboard'
+            axiosClient.post("/employee", {
+                    employee_id: userData.employee_id,
+                    employee_name: userData.employee_name,
+                    employee_email: userData.employee_email,
+                    employee_role: userData.employee_role,
+                    employee_image: userData.employee_image,
+                    employee_start_date: moment(userData.employee_start_date).format('L'),
+                    employee_status: 'Active',
+                    type:'setAccount',
+                })
+            .then(({data}) => {
+                alert(data.message);
+                window.location.href = '/dashboard'
+            
+            }).catch((er)=>{
+                console.log(er);
+            })
+
+       }else{
+        
+        const res = totalEmployee.find(e => e.employee_id.trim() === userData.employee_id)
+        const url = {
+            employee_email: userData.employee_email,
+            employee_image: userData.employee_image || "",
+        }
+
+        if(res){
+            if(!res.employee_email){
+                axiosClient.put(`/employee/${res.id}?${new URLSearchParams(url).toString()}`,{
+                        action:'Employee_set_account',
+                })
+               .then(() => { 
+    
+                alert("Your account is set successfully as an employee.");
+                window.location.href = '/dashboard'
+    
+               }).catch((er)=>{
+                console.log(er);
+               })
+               return;
+            }
+
+
+            alert("EMPLOYEE ID IS ALREADY USED, PLEASE TRY ANOTHER ONE");
+        
+        }else{
+            if(!userData.employee_id){
+                alert("INPUT THE EMPLOYEE ID PLEASE...")
+            }
+            alert("EMPLOYEE ID NOT FOUND!") 
+        }
+      
+       }
        
-       }).catch((er)=>{
-        console.log(er);
-       })
       }
+
 
       
       if(load){
@@ -84,6 +165,8 @@ function Dashboard() {
                 <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] bg-white">
                     <div className="px-6 pt-6 2xl:container ">
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 ">
+
+                            {empRole === "HR" && (
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
                                 <div className="bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-[#0984e3] to-[#0984e3] text-white shadow-[#0984e3]/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="w-6 h-6 text-white">
@@ -92,7 +175,7 @@ function Dashboard() {
                                 </div>
                                 <div className="p-4 text-right">
                                     <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Total Employees</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">20</h4>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{totalEmployee && totalEmployee.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
                                     <div className='border w-[30%] p-2 text-sm rounded-md flex gap-2 justify-center items-center bg-[#0984e3] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
@@ -100,10 +183,11 @@ function Dashboard() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                     </svg>
         
-                                        <span>View User</span>
+                                        <Link to="/employees" className="text-sm">View User</Link>
                                     </div>
                                 </div>
                             </div>
+                            )}
         
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
                                 <div className="bg-clip-border  mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-[#00b894] to-[#00b894] text-white shadow-[#00b894]/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
@@ -114,7 +198,7 @@ function Dashboard() {
                                 </div>
                                 <div className="p-4 text-right">
                                     <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Notifications</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">50</h4>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{totalNotifications &&  totalNotifications.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
                                 <div className='border w-[40%] p-2 rounded-md flex gap-2 justify-center items-center bg-[#00b894] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
@@ -122,33 +206,39 @@ function Dashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                 </svg>
         
-                                        <span>Notifications</span>
+                                        <Link to="/notification" className="text-sm">Notifications</Link>
                                     </div>
                                 </div>
                             </div>
-        
+
+
+                            {empRole?.trim() === "HR"  && (
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
-                                <div className="bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-orange-600 to-orange-400 text-white shadow-orange-500/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                                <div className="bg-clip-border  mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-[#ff7675] to-[#ff7675] text-white shadow-[#ff7675]/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
+                                
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-7 h-7">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                     </svg>
+
+        
                                 </div>
                                 <div className="p-4 text-right">
-                                    <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Applied users</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">5</h4>
+                                    <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Pending leaves</p>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{pendingLeave && pendingLeave.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
-                                <div className='border w-[40%] text-sm p-2 rounded-md flex gap-2 justify-center items-center bg-orange-600 text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
+                                <div className='border w-[40%] p-2 rounded-md flex gap-2 justify-center items-center bg-[#ff7675] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                 </svg>
         
-                                        <span>View Application</span>
+                                        <Link to="/leave" className="text-sm">View now</Link>
                                     </div>
                                 </div>
                             </div>
-                        
+                            )}
         
+                           
                         </div>
                     </div> 
         
@@ -160,22 +250,36 @@ function Dashboard() {
             )
         case 'NOT_EMPLOYEED':
             return (
+                <>
                 <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
                     <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
                         <div className="hero min-h-screen bg-base-200">
                             <div className="hero-content text-center">
                                 <div>
                                     <h1 className="text-5xl font-bold">Hi there, Welcome to Workwise<span className="text-[#00b894]">HR.</span></h1>
-                                        <p className="py-6 opacity-70 font-medium">Ooopps, looks like you don't have a position yet. <br></br> Please contact to your HR or ADMIN to add your a position.</p> 
-                                    <button className="btn bg-[#00b894] opacity-70 text-white hover:bg-[#00b894] hover:opacity-100 transition-all ease-in" onClick={()=> {
+                                        <p className="py-6 opacity-70 font-medium">Ooopps, looks like you don't have a position yet. <br></br> Please use your <span className="font-bold text-red-500">EMPLOYEE ID</span> to become an employee.</p> 
+                                        <button className="btn bg-[#00b894] opacity-70 text-white hover:bg-[#00b894] hover:opacity-100 transition-all ease-in" onClick={()=> {
+
                                         document.getElementById('my_modal_5').showModal();
-                                        roleRef.current.value = "Select role here"
-                                    }}>Contact HR</button>
+                                        axiosClient.get("/user")
+                                        .then((user)=>{
+                                            setUserData({
+                                                ...userData,
+                                                employee_email:user.data.email,
+                                                employee_image:user.data.image
+                                                
+                                            }) 
+                                          
+                                        })
+                                      
+                                    }}>Click here</button>
                                 </div>
                             </div>
                         </div>   
                     </div>
-                    {/* <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle ">
+                
+                </div> 
+                <dialog id="my_modal_5" className="modal modal-bottom sm:modal-middle ">
             <div className="modal-box w-[10px]">
                 <div className="flex justify-between">
                 <div>
@@ -191,40 +295,20 @@ function Dashboard() {
                 </div>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
                   Employee ID#
-                   <input ref={emp_idRef}  type="text" className="grow" placeholder="i.g Onsoure000***" />
-                </label>
-                <label className="input input-bordered mt-2 flex items-center gap-2">
-                  Full name
-                   <input ref={fullnameRef}  type="text" className="grow opacity-70 cursor-not-allowed" placeholder="i.g marcus" disabled    />
+                   <input value={userData.employee_id || ""}   type="text" className="grow" placeholder="i.g Onsoure000***" onChange={(e)=> setUserData({...userData, employee_id: e.target.value })} />
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
                    Email
-                   <input ref={emailRef} type="email" className="grow opacity-70 cursor-not-allowed" placeholder="i.g email" disabled  />
+                   <input value={userData.employee_email || ""} type="email" className="grow opacity-70 cursor-not-allowed" placeholder="i.g email" disabled  onChange={(e)=> setUserData({...userData, employee_email: e.target.value })} />
                 </label>
-                <label className="input input-bordered mt-2 flex items-center gap-2 mb-4">
-                   Start-date:
-                   <DatePicker className="grow"  selected={userData.employee_start_date}  onChange={(date) => setUserData({...userData, employee_start_date:date})} />
-                </label>
-            
-    
-                <label className="form-control w-full mt-2">
-                   <div className="label">
-                      <span className="label-text">Role</span>
-                   </div>
-                   <select ref={roleRef} className="select select-bordered" >
-                      <option disabled defaultValue>Select here</option>
-                      <option value="HR">HR</option>
-                      <option value="ADMIN">ADMIN</option>
-                   </select>
-                </label>
-               
+             
                 <div className="modal-action">
-                    <button type='submit'  className="btn btn-success text-white w-[100%]">Set account as HR</button>
+                    <button type='submit'  className="btn btn-success text-white w-[100%]">Submit</button>
                 </div>
                 </form>
             </div>
-        </dialog> */}
-                </div> 
+        </dialog>
+                </>
             )
       
         default:
@@ -238,11 +322,18 @@ function Dashboard() {
                                         <p className="py-6 opacity-70 font-medium">Look like no ADMIN or HR role in this application, <br></br> so you can set your account to two role now to manage this application.</p> 
                                     <button className="btn bg-[#00b894] opacity-70 text-white hover:bg-[#00b894] hover:opacity-100 transition-all ease-in" onClick={()=> {
                                         document.getElementById('my_modal_5').showModal();
-                                        setUserData({
-                                            ...userData,
-                                            employee_name:user.name,
-                                            employee_email:user.email
+                                        axiosClient.get("/user")
+                                        .then((user)=>{
+                                            setUserData({
+                                                ...userData,
+                                                employee_name:user.data.name,
+                                                employee_email:user.data.email,
+                                                employee_image:user.data.image
+                                                
+                                            }) 
+                                          
                                         })
+                                     
                                       
                                     }}>Set Account</button>
                                 </div>
@@ -269,11 +360,11 @@ function Dashboard() {
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
                   Full name
-                   <input value={userData.employee_name}  type="text" className="grow opacity-70 cursor-not-allowed" placeholder="i.g marcus" disabled   onChange={(e)=> setUserData({...userData, employee_name:  e.target.value})}  />
+                   <input value={userData.employee_name || ""}  type="text" className="grow opacity-70 cursor-not-allowed" placeholder="i.g marcus" disabled   onChange={(e)=> setUserData({...userData, employee_name:  e.target.value})}  />
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
                    Email
-                   <input value={userData.employee_email} type="email" className="grow opacity-70 cursor-not-allowed" placeholder="i.g email" disabled  onChange={(e)=> setUserData({...userData, employee_email: e.target.value })} />
+                   <input value={userData.employee_email || ""} type="email" className="grow opacity-70 cursor-not-allowed" placeholder="i.g email" disabled  onChange={(e)=> setUserData({...userData, employee_email: e.target.value })} />
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2 mb-4">
                    Start-date:

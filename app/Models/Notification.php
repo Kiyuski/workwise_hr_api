@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Department extends Model
+class Notification extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'department',
+        'leave_id',
+        'notification_message',
+        'leave_has_seen'
     ];
 
-    public function leaves()    
-    {
-        return $this->hasMany(Leave::class, 'department_id');
-    }
+   
+
 }

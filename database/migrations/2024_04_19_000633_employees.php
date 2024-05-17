@@ -20,11 +20,14 @@ return new class extends Migration
             $table->foreign('position_id')->references('id')->on('positions');
             $table->boolean("employee_set_head")->default(0);
             $table->string("employee_id");
-            $table->string("employee_name");
-            $table->string("employee_email");
+            $table->string("employee_name")->nullable();
+            $table->string("employee_email")->nullable();
             $table->string("employee_phone")->nullable();
             $table->string("employee_address")->nullable();
             $table->string("employee_gender")->nullable();
+            $table->integer('employee_age')->nullable(); 
+            $table->decimal('employee_height', 10, 2)->nullable();
+            $table->decimal('employee_weight', 10, 2)->nullable();
             $table->string("employee_role");
             $table->string("employee_status");
             $table->string("employee_image")->nullable();

@@ -19,6 +19,7 @@ import Addnewattendance from "./views/Add-new-attendance";
 import Mainhero from "./views/Mainhero";
 import UpdateAttendance from "./views/Update-attendance";
 import PartNumberToArray from "./views/PartNumberToArray";
+import Notifications from "./views/Notifications";
 
 
 
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
           { path: "/attendance/updateNewAttendance/:id", element: <UpdateAttendance />},
           { path: "/employees/:id/update", element: <ShowUser />},
           { path: "/employees/:id", element: <UserDetails />},
+          { path: "/notification", element: <Notifications />},
  
       
         ]

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use App\Models\Leave;
 use App\Models\User;
+use App\Models\Notification;
 use App\Http\Requests\StoreLeaveRequest;
 use App\Http\Requests\UpdateLeaveRequest;
 use Illuminate\Http\Request;
@@ -15,73 +16,78 @@ class LeaveController extends Controller
      */
     public function index(Request $request)
     {
-        $department_head = $request->employee_id;
+        $department_head = $request->input("employee_id");
+        $searchKeyword = $request->input('search');
      
         switch ($request->input('type')) {
             case 'leave_history':
-                $data = DB::select("
-                WITH DepartmentHeads AS (
-                    SELECT
-                        MAX(m.employee_set_head) AS employee_set_head,
-                        m.department_id,
-                        MAX(m.employee_name) AS department_head_name
-                    FROM
-                        employees m
-                    WHERE
-                        m.employee_set_head = 1
-                    GROUP BY
-                        m.department_id
+                $data = DB::table('leaves as l')
+                ->select(
+                    'em.id',
+                    'em.employee_id',
+                    'em.employee_name',
+                    'de.department',
+                    'p.position',
+                    'l.id as leave_id',
+                    'em.employee_image',
+                    'lt.leave_type',
+                    'l.leave_status_date_time',
+                    DB::raw("CONCAT(de.department, '-', m.employee_name, ' (', m.employee_role, ')') as approval_head"),
+                    'l.leave_status'
                 )
-
-                SELECT
-                    em.employee_id,
-                    em.employee_name,
-                    de.department,
-                    p.position,
-                    lt.leave_type,
-                    l.leave_status_date_time,
-                    CONCAT(p1.position, '-', dh.department_head_name) AS department_head,
-                    l.leave_status
-                FROM
-                    leaves l
-                LEFT JOIN
-                    employees em ON l.employee_id = em.id
-                LEFT JOIN
-                    leave_types lt ON l.leave_type_id = lt.id
-                LEFT JOIN
-                    departments de ON l.department_id = de.id
-                LEFT JOIN
-                    positions p ON em.position_id = p.id
-                LEFT JOIN
-                    DepartmentHeads dh ON dh.department_id = de.id
-                LEFT JOIN
-                    positions p1 ON em.position_id = p1.id
-                ORDER BY em.id desc
-            ");
+                ->leftJoin('employees as em', 'l.employee_id', '=', 'em.id')
+                ->leftJoin('leave_types as lt', 'l.leave_type_id', '=', 'lt.id')
+                ->leftJoin('departments as de', 'l.department_id', '=', 'de.id')
+                ->leftJoin('employees as m', 'l.employee_approval_id', '=', 'm.id')
+                ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
+                ->when($searchKeyword, function ($query) use ($searchKeyword) {
+                    return $query->where('em.employee_name', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('l.leave_status', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('de.department', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('p.position', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('lt.leave_type', 'like', '%' . $searchKeyword . '%');
+                })
+                ->orderBy('l.id', 'DESC')
+                ->paginate(10)
+                ->appends(['search' => $searchKeyword]);
 
             break;
             case 'department_request':
+            
                 $data = Leave::query()->select(
                     'departments.id AS department_id',
                     'employees.employee_id as employee_id',
                     'leaves.id AS leave_id',
                     'departments.department',
                     'employees.employee_name AS employee_name',
+                    'employees.employee_image',
                     'leave_types.leave_type AS leave_type',
                     'leaves.leave_apply_date',
                     'leaves.leave_start_date',
                     'leaves.leave_end_date',
                     'leaves.leave_status',
                     'leaves.created_at',
-                    'jn.id as employee_head_id',
+                    'positions.position',
+                    'employees.employee_role'
                 )
                 ->leftJoin('leave_types', 'leaves.leave_type_id', '=', 'leave_types.id')
                 ->join('employees', 'leaves.employee_id', '=', 'employees.id')
-                ->join('departments', 'employees.department_id', '=', 'departments.id')
-                ->join('employees as jn', function($join) use($department_head) {
-                    $join->on('jn.department_id', '=', 'departments.id')
-                        ->where('jn.id', '=', $department_head);
-                })->get();
+                ->join('positions', 'employees.position_id', '=', 'positions.id')
+                ->join('departments', 'leaves.department_id', '=', 'departments.id')
+                ->when($searchKeyword, function ($query) use ($searchKeyword, $department_head) {
+                    $query->where(function($query) use ($searchKeyword) {
+                        $query->where('leave_types.leave_type', 'like', '%' . $searchKeyword . '%')
+                              ->orWhere('leaves.leave_status', 'like', '%' . $searchKeyword . '%')
+                              ->orWhere('employees.employee_name', 'like', '%' . $searchKeyword . '%')
+                              ->orWhere('departments.department', 'like', '%' . $searchKeyword . '%')
+                              ->orWhere('positions.position', 'like', '%' . $searchKeyword . '%')
+                              ->orWhere('employees.employee_id', 'like', '%' . $searchKeyword . '%');
+                    });
+                })->where('leaves.employee_approval_id', '=', $department_head)
+                ->orderBy('leaves.id', 'desc')
+                ->paginate(10)
+                ->appends(['search' => $searchKeyword]);
+                
             break;
             case 'single':
                 $data = Leave::query()->select(
@@ -92,14 +98,48 @@ class LeaveController extends Controller
                     'l.updated_at',
                     'l.leave_end_date',
                     'l.leave_status',
-                    'l.created_at'
+                    'l.created_at',
+                    'em.employee_image',
+                    'em.employee_name',
+                    'l.leave_status_date_time'
                 )
                 ->from('leaves as l')
                 ->leftJoin('leave_types as lt', 'l.leave_type_id', '=' , 'lt.id')
-                ->where("l.employee_id", "=", $request->employee_id)
-                ->get();
+                ->leftJoin('employees as em', 'l.employee_approval_id', '=' , 'em.id')
+                ->when($searchKeyword, function ($query) use ($searchKeyword) {
+                    return $query->where('lt.leave_type', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('l.leave_status', 'like', '%' . $searchKeyword . '%');
+                })->where("l.employee_id", "=", $request->employee_id)
+                ->orderBy('l.id', 'desc')
+                ->paginate(10)
+                ->appends(['search' => $searchKeyword]);
             break;
             case 'all':
+                $data = Leave::query()->select(
+                    'emp.employee_id as employee_id',
+                    'emp.employee_name as employee_name',
+                    'emp.employee_image',
+                    'l.id as leave_id',
+                    'lt.leave_type as leave_type',
+                    'l.leave_apply_date',
+                    'l.leave_start_date',
+                    'l.leave_end_date',
+                    'l.leave_status',
+                    'l.created_at'
+                )
+                ->from('leaves as l')
+                ->joinLeaveType()
+                ->joinEmployee()
+                ->when($searchKeyword, function ($query) use ($searchKeyword) {
+                    return $query->where('lt.leave_type', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('l.leave_status', 'like', '%' . $searchKeyword . '%')
+                                ->orWhere('emp.employee_name', 'like', '%' . $searchKeyword . '%');
+                })->where("l.employee_approval_id", "=", $request->employee_id)
+                ->orderBy("created_at", "DESC")
+                ->paginate(2)
+                ->appends(['search' => $searchKeyword]);
+            break;
+            case 'all_pending_leave':
                 $data = Leave::query()->select(
                     'emp.employee_id as employee_id',
                     'emp.employee_name as employee_name',
@@ -112,17 +152,29 @@ class LeaveController extends Controller
                     'l.created_at'
                 )
                 ->from('leaves as l')
-                ->leftJoin('leave_types as lt', 'l.leave_type_id', '=' , 'lt.id')
-                ->join('employees as emp', 'l.employee_id', '=' , 'emp.id')
-                ->where("emp.id", "<>", $request->employee_id)
+                ->joinLeaveType()
+                ->joinEmployee()
+                ->where(function($query){
+                    $query->where("l.employee_approval_role", "=", "HR")
+                          ->orWhere("l.employee_approval_role", "=", "ADMIN");
+                })
+                ->where("l.leave_status", "=", "PENDING")
+                ->latest('l.created_at') 
+                ->limit(5) 
                 ->get();
             break;
+            
             
             default:
             break;
         }
    
 
+         if($request->input('type') === "leave_history" || $request->input('type') === "single" || $request->input('type') === "all" || $request->input("type") === "department_request"){
+            foreach ($data as $dt) {
+                $dt->employee_image = $dt->employee_image ? \URL::to($dt->employee_image) : null;
+            };
+         }
 
          return response()->json([
             'data' => $data,
@@ -136,16 +188,18 @@ class LeaveController extends Controller
     public function store(StoreLeaveRequest $request)
     {
         //
-  
             $datas = $request->validated();
-   
             Leave::create($datas);
+
+            $latestInserTedData = Leave::latest()->first();
 
             return response()->json([
             'message' => 'Leave is created successfully',
+            'latest_leave_data' => $latestInserTedData
             ], 200);
-    
+
     }
+
 
     /**
      * Display the specified resource.
@@ -154,43 +208,36 @@ class LeaveController extends Controller
     {
       
         
-        $leaves = DB::table('leaves as l')
-        ->select(
-        'em.employee_image',
-        'em.employee_name',
-        'l.id',
-        'l.employee_id',
-        'l.leave_type_id',        
-        DB::raw('(SELECT CONCAT(de.department, " - ", em.employee_name) 
-                  FROM departments de 
-                  LEFT JOIN employees em ON em.department_id = de.id 
-                  WHERE de.id = '.$request->input("data").' AND em.employee_set_head = 1) AS department_head'),
-        DB::raw('(SELECT de.id 
-        FROM departments de 
-        LEFT JOIN employees em ON em.department_id = de.id 
-        WHERE de.id = '.$request->input("data").' AND em.employee_set_head = 1) AS department_id'),         
-        'l.leave_apply_date',
-        'l.leave_start_date',
-        'l.leave_end_date',
-        'l.leave_reason',
-        'l.leave_status'
+        $leave = Leave::select(
+            'leaves.employee_approval_role',
+            'employees.employee_image',
+            'employees.employee_name',
+            'leaves.id',
+            'leaves.department_id',
+            'leaves.employee_id',
+            'leaves.leave_type_id',
+            'leaves.leave_apply_date',
+            'leaves.leave_start_date',
+            'leaves.leave_end_date',
+            'leaves.leave_reason',
+            'leaves.leave_status',
+            'ty.leave_type',
+            'leaves.employee_approval_id',
+            DB::raw('CONCAT(de.department, " - ", em.employee_name, " (", em.employee_role, ")") as department_head')
         )
-        ->leftJoin('leave_types as ty', 'l.leave_type_id', '=', 'ty.id')
-        ->leftJoin('employees as em', 'l.employee_id', '=', 'em.id')
-        ->where("l.id", "=", $id)
+        ->leftJoin('leave_types as ty', 'leaves.leave_type_id', '=', 'ty.id')
+        ->leftJoin('employees', 'leaves.employee_id', '=', 'employees.id')
+        ->leftJoin('departments as de', 'leaves.department_id', '=', 'de.id')
+        ->leftJoin('employees as em', 'leaves.employee_approval_id', '=', 'em.id')
+        ->where('leaves.id', $id)
         ->first();
+        
 
 
-        if (!$leaves) {
-            return response()->json([
-               'message' => 'Leave is not found',
-            ], 404);
-        };
-
-        $leaves->employee_image = $leaves->employee_image ?  \URL::to($leaves->employee_image) : null;
+        $leave->employee_image = $leave->employee_image ?  \URL::to($leave->employee_image) : null;
 
         return response()->json([
-            'data' => $leaves
+            'data' => $leave
         ], 200);
         
     }
@@ -206,7 +253,6 @@ class LeaveController extends Controller
         
         $leave = Leave::find($id);
 
-  
         if (!$leave) {
             return response()->json([
                 'message' => 'Leave is not found',
@@ -216,11 +262,9 @@ class LeaveController extends Controller
        
         $leave->update($data);
 
-
         return response()->json([
             'message' => 'Leave is updated successfully',
-            'leave' => $leave,
-            'now' => now()
+            'data' => $leave,
         ], 200);
     }
 
@@ -244,6 +288,8 @@ class LeaveController extends Controller
          ], 200);
     }
 
+
+    
 
    
 }

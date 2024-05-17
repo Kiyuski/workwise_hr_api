@@ -14,4 +14,9 @@ class Leave_type extends Model
         'leave_number_of_days',
         'leave_status',
     ];
+
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class, 'leave_type_id');
+    }
 }

@@ -17,7 +17,8 @@ class PositionResource extends JsonResource
         return [
             "position_id" => $this->id,
             "position" => $this->position,
-            "created_at" => $this->created_at
+            "created_at" => $this->created_at,
+            "total_employee" => $this->Total_employee_with_this_position
         ];
     }
 }

@@ -5,16 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Holiday;
 use App\Http\Requests\StoreHolidayRequest;
 use App\Http\Requests\UpdateHolidayRequest;
+use Illuminate\Http\Request;
 
 class HolidayController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
-        return Holiday::query()->orderBy('created_at', 'desc')->get();
+        $searchKeyword = $request->input('search');
+        return Holiday::query()->when($searchKeyword, function ($query) use ($searchKeyword) {
+            return $query->where('holidays.holiday', 'like', '%' . $searchKeyword . '%');
+        })->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->appends(['search' => $searchKeyword]);
         
     }
 

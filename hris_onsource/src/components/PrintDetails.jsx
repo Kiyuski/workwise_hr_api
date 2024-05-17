@@ -48,7 +48,7 @@ export const PrintData = forwardRef((props, ref) => {
                             <div className="flex-1 flex  justify-end overflow-hidden ">
                                 <div className="avatar border p-2 rounded shadow-md max-md:rounded-none max-md:shadow-none max-md:border-none">
                                     <div className=" w-80 rounded h-80 object-cover max-md:w-40 max-md:h-40">
-                                        <img src={`${empData.employee_image || "https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`}  />
+                                        <img src={`${empData.employee_image || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"}`}  />
                                     </div>
                                 </div>
                             </div>

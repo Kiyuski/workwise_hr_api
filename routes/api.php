@@ -12,7 +12,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
-
+use App\Http\Controllers\NotificationController;
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('employee', EmployeeController::class);
     Route::apiResource('holiday', HolidayController::class);
     Route::apiResource('leave_type', LeaveTypeController::class);
+    Route::apiResource('notification', NotificationController::class);
 
 
     Route::get('/leave/employee/{id}', [LeaveController::class, 'allEmployeeLeave']);

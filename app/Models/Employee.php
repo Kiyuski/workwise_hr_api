@@ -46,9 +46,17 @@ class Employee extends Model
         "employee_employment_history",
         "employee_character_reference",
         "employee_person_to_notify",
+        "employee_age",
+        "employee_height",
+        "employee_weight"
        
         
     ];
+
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class, 'employee_id');
+    }
 
    
    
