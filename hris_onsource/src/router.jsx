@@ -23,10 +23,6 @@ import Notifications from "./views/Notifications";
 
 
 const router = createBrowserRouter([
-  {
-    path: "/testing",
-    element: <PartNumberToArray />,
-  },
       {
         path: "/",
         element: <DefaultLayout />,
