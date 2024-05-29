@@ -18,6 +18,7 @@ function ShowUser() {
   
 
   const {id} =  useParams();
+  const [total_leaves_have, setTotalLeaves_have] = useState(null);
   const [startDate, setStartDate] = useState(new Date());
   const [loader, setloader] = useState(false);
   const [allrole, setRole] = useState([])
@@ -104,24 +105,53 @@ function ShowUser() {
   });
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this employee in database?')) {
-      axiosClient.delete(`/employee/${id}`)
-      .then((res) => {
-         alert('Employee is deleted in database successfully.');
+    
+    swal({
+      title: "Are you sure?",
+      text: "Once deleted, you will not be able to recover this employee?",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    })
+    .then((willDelete) => {
+      if (willDelete) {
+        if(total_leaves_have > 0) {
+          swal({
+            text: `${empData.employee_name}, leave application in the database so you're not allowed to delete this data.`,
+            icon: "error",
+            dangerMode: true,
+          })
+          return;
+        }
+        
+        axiosClient.delete(`/employee/${id}`)
+        .then(() => {
+          swal({
+            title: "Good job!",
+            text: `${empData.employee_name} data is deleted successfully.`,
+            icon: "success",
+            button: "Okay!",
+          });
          navigate('/employees');
-       })
-      .catch((err) => {
+        })
+       .catch((err) => {
          console.error(err);
        })
      
+        
       } else {
-    
-      alert('Employee is not deleted in database.');
+        swal({
+         title: "Oooops!",
+         text: `${empData.employee_name} data is not deleted in database.`,
+         icon: "error",
+         dangerMode: true,
+       })
       }
+    });
+
+
     
   }
-
-
 
 
   const addMoreData = (choose) => {
@@ -236,25 +266,16 @@ function ShowUser() {
    setloader(true);
     Promise.all([getDataList('position'), getDataList('department'), getDataList('employee')])
       .then((dt) => {
-        
+      
         axiosClient.get(`/employee/${id}`)
         .then(({data : {data}})=>{
           setloader(false);
 
-          const roles = Array.from(new Set(dt[2].data.map(r => r.employee_role)));
 
           let allRoles = ['EMPLOYEE', 'HR', 'ADMIN'];
           
-          roles.forEach(al => {
-              if (al.trim() === "HR" || al.trim() === "ADMIN") {
-                  allRoles = allRoles.filter(r => r !== al.trim());
-              }
-          });
-          
           setRole(allRoles);
-          
-          
-         
+    
           setEmpData({...empData,
             employee_provincial_address: data.employee_provincial_address ,
             employee_birthdate: data.employee_birthdate,
@@ -289,10 +310,12 @@ function ShowUser() {
             employee_image: data?.employee_image, 
             position_id:data?.position_id,  
             department_id:data?.department_id,
-            employee_person_to_notify: empData.employee_position || data?.employee_person_to_notify,
+            employee_case_emergency: data?.employee_person_to_notify,
+            employee_reason_for_leaving:data.employee_reason_for_leaving || "",
+            employee_status:data.employee_status
           })
 
-         
+          setTotalLeaves_have(data.total_leaves_have)
           setStartDate(data.employee_start_date);
         })
         .catch((e)=>{
@@ -344,6 +367,7 @@ function ShowUser() {
   
     const params = {
       ...empData,
+      employee_image: empData.employee_image || "",
       employee_birthdate: empData.employee_birthdate ? empData.employee_birthdate : "",
       employee_date_birth: empData.employee_date_birth ? empData.employee_date_birth :"",
       employee_age:parseInt(empData.employee_age) || "",
@@ -356,8 +380,8 @@ function ShowUser() {
       employee_person_to_notify: JSON.stringify(empData.employee_case_emergency),
       action: 'Employee_update_data'
     };
-    
- 
+
+
     const config = {
       headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -367,10 +391,16 @@ function ShowUser() {
  
       const queryString = new URLSearchParams(params).toString();
       axiosClient.put(`/employee/${id}`, queryString, config)
-      .then((d)=>{
-      
-          alert("Employee is updated successfully");
-          navigate("/employees");
+      .then(()=>{
+
+        swal({
+          title: "Good job!",
+          text: `${empData.employee_name} (${empData.employee_role}) data is updated successfully.`,
+          icon: "success",
+          button: "Okay!",
+        });
+
+        navigate("/employees");
       })
       .catch((err)=>{
           const {response} = err;
@@ -394,14 +424,14 @@ function ShowUser() {
       {!loader && (
   <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
   <h2 className="card-title font-bold">EMPLOYEE INFORMTION SHEET</h2>
-  <div className='flex items-center gap-5 mt-9'>
+  <div className='flex items-center gap-5 mt-9 max-md:flex-col'>
   <div className="avatar ">
-      <div className="w-24 rounded-full ring ring-[#00b894] ring-offset-base-100 ring-offset-2">
+      <div className="w-24 rounded-full ring ring-[#0984e3] ring-offset-base-100 ring-offset-2">
         <img src={empData.employee_image ? typeof empData.employee_image === "object" ? URL.createObjectURL(empData.employee_image) : empData.employee_image  : "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"} />
       </div>
   </div>
-  <div className="flex-shrink-0 flex gap-3" >
-      <input type="file" className="opacity-85 file-input file-input-md w-full max-w-xs file-input-success file:text-white text-gray-400"  onChange={(e)=>{
+  <div className="flex-shrink-0 flex gap-3 flex-col" >
+      <input type="file" className=" file-input file-input-md w-full max-w-xs file-input-primary opacity-70  file:text-white text-gray-400"  onChange={(e)=>{
               const file = e.target.files[0]; 
                const reader = new FileReader();
                reader.onload = () => {
@@ -409,9 +439,12 @@ function ShowUser() {
                };
                reader.readAsDataURL(file);
          }} />
+
+           <div className={`badge ${empData?.employee_status === "Active" ? "badge-success": "badge-error"} font-semibold text-sm text-white max-md:w-full max-md:p-3`}>{empData?.employee_status || ""}</div>
     </div>
+  
   </div>
-  <div className='flex gap-5 mt-5'>
+  <div className='flex gap-5 mt-5 max-md:flex-col'>
     <label className="form-control w-full  mt-2 ">
         <div className="label">
           <span className="label-text">Position:</span>
@@ -433,7 +466,7 @@ function ShowUser() {
     </label>
   </div>
 
-  <div className='flex gap-5'>
+  <div className='flex gap-5 max-md:flex-col'>
     <label className="form-control w-full  mt-2 ">
         <div className="label">
           <span className="label-text">Email Address:</span>
@@ -449,7 +482,7 @@ function ShowUser() {
 
   </div>
 
-   <div className='flex gap-5'>
+   <div className='flex gap-5 max-md:flex-col'>
   <label className="form-control w-full mt-2">
       <div className="label">
         <span className="label-text">PhilHealth #:</span>
@@ -507,7 +540,7 @@ function ShowUser() {
       <select value={empData.department_id} className="select select-bordered" onChange={(e)=> setEmpData({...empData, department_id: e.target.value})}>
             <option disabled defaultValue>Select here</option>
             {empData.employee_department && empData.employee_department.map((de)=>{
-               return <option key={de.id} value={de.id}>{de.department}</option>
+               return <option key={de.id} value={de.id}>{de.department} ({de.total_employees})</option>
             })}
          </select>  
   </label>
@@ -543,7 +576,7 @@ function ShowUser() {
   </label>
   </div>
 
-  <div className='flex gap-5'>
+  <div className='flex gap-5 max-md:flex-col'>
     <label className="form-control w-full mt-2">
         <div className="label">
           <span className="label-text">Age</span>
@@ -574,36 +607,38 @@ function ShowUser() {
   </label>
   </div>
 
-  <div className='flex gap-5 mt-2'>
+  <div className='flex gap-5 mt-2 max-md:flex-col'>
       <label className="form-control w-full">
         <div className="label">
           <span className="label-text">Civil Status:</span>
         </div>
-        <div className='flex gap-2 items-center'>
-        <input type="radio" name="radio-1" className="radio"
-        checked={empData.employee_civil_status === "Single"}
-        value="Single"
-        onChange={() =>  setEmpData({...empData, employee_civil_status: "Single"})}
-        />
-        <span className="label-text">Single</span>
-        <input type="radio" name="radio-1" className="radio"
-         value="Married"
-        checked={empData.employee_civil_status === "Married"}
-        onChange={() =>  setEmpData({...empData, employee_civil_status: "Married"})}
-        />
-        <span className="label-text">Married</span>
+
+        <div className='flex gap-2 items-center '>
+          <input type="radio" name="radio-1" className="radio"
+          checked={empData.employee_civil_status === "Single"}
+          value="Single"
+          onChange={() =>  setEmpData({...empData, employee_civil_status: "Single"})}
+          />
+          <span className="label-text max-md:text-[12px]">Single</span>
+          <input type="radio" name="radio-1" className="radio"
+          value="Married"
+          checked={empData.employee_civil_status === "Married"}
+          onChange={() =>  setEmpData({...empData, employee_civil_status: "Married"})}
+          />
+          <span className="label-text max-md:text-[12px]">Married</span>
+          
         <input type="radio" name="radio-1" className="radio" 
           value="Separated"
           checked={empData.employee_civil_status === "Separated"}
           onChange={() =>  setEmpData({...empData, employee_civil_status: "Separated"})}
         />
-        <span className="label-text">Separated</span>
+        <span className="label-text max-md:text-[12px]">Separated</span>
         <input type="radio" name="radio-1" className="radio"
           value="Widow(er)"
          checked={empData.employee_civil_status === "Widow(er)"}
          onChange={() =>  setEmpData({...empData, employee_civil_status: "Widow(er)"})}
         />
-        <span className="label-text">Widow(er)</span>
+        <span className="label-text max-md:text-[12px]">Widow(er)</span>
         </div>
     </label>
     <label className="form-control w-full mt-2">
@@ -675,12 +710,12 @@ function ShowUser() {
 
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Relationship</th>
-        <th>Age</th>
-        <th>Date of Birth</th>
-        <th className='flex gap-2 justify-center'>
-        <div onClick={()=> addMoreData("Dependents")} className=' flex w-12 justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
+        <th className='tracking-wider'>Name</th>
+        <th className='tracking-wider'>Relationship</th>
+        <th className='tracking-wider'>Age</th>
+        <th className='tracking-wider'>Date of Birth</th>
+        <th className='flex gap-2 justify-center tracking-wider'>
+        <div onClick={()=> addMoreData("Dependents")} className=' flex w-12 justify-center items-center p-2 rounded-md bg-[#0984e3] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"  />
             </svg>
@@ -692,23 +727,23 @@ function ShowUser() {
     <tbody>
       {empData.employee_dependent.length &&  empData.employee_dependent.map((de, i) => {
         return (
-          <tr key={i}>
-          <td><input type="text" value={de.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+          <tr key={i} className='whitespace-nowrap'>
+          <td className='whitespace-nowrap'><input type="text" value={de.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updateData = [...empData.employee_dependent];
             updateData[i].name = e.target.value;
             setEmpData({...empData, employee_dependent: updateData});
           }} /></td>
-          <td><input type="text" value={de.relationship}  placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+          <td className='whitespace-nowrap '><input type="text" value={de.relationship}  placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updateData = [...empData.employee_dependent];
             updateData[i].relationship = e.target.value;
             setEmpData({...empData, employee_dependent: updateData});
           }} /></td>
-          <td><input type="number" value={de.age}  placeholder="Type here" className="input-md input w-full" onChange={(e)=>{
+          <td className='whitespace-nowrap '><input type="number" value={de.age}  placeholder="Type here" className="input-md input w-full" onChange={(e)=>{
             const updateData = [...empData.employee_dependent];
             updateData[i].age = e.target.value;
             setEmpData({...empData, employee_dependent: updateData});
           }} /></td>
-          <td>
+          <td className='whitespace-nowrap '>
             <DatePicker  value={moment(de.date_of_birth).format('L') || new Date()} className="  input input-bordered flex items-center gap-2 w-full " selected={de.date_of_birth}  onChange={(date)=> {
             const updateData = [...empData.employee_dependent];
             updateData[i].date_of_birth = date;
@@ -744,32 +779,32 @@ function ShowUser() {
 
     <thead>
       <tr>
-        <th></th>
-        <th>School</th>
-        <th>Years Attended</th>
-        <th>Degree</th>
+        <th className='tracking-wider'></th>
+        <th className='tracking-wider'>School</th>
+        <th className='tracking-wider'>Years Attended</th>
+        <th className='tracking-wider'>Degree</th>
       </tr>
     </thead>
     <tbody>
       {empData.employee_educational_background && empData.employee_educational_background.map((ed , i)=>{
         return (
           <tr key={i}>
-          <td>
+          <td className='whitespace-nowrap'>
             {ed.type}
           </td>
-          <td><input value={ed.school} type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+          <td className='whitespace-nowrap'><input value={ed.school} type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_educational_background];
             updatePayloadEd[i].school = e.target.value;
             setEmpData({...empData, employee_educational_background: updatePayloadEd});
           }} /></td>
-          <td><input value={ed.years_attended} type="text" placeholder="Type here" className="input-md input w-full " 
+          <td className='whitespace-nowrap'><input value={ed.years_attended} type="text" placeholder="Type here" className="input-md input w-full " 
           onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_educational_background];
             updatePayloadEd[i].years_attended = e.target.value;
             setEmpData({...empData, employee_educational_background: updatePayloadEd});
           }}
           /></td>
-          <td><input value={ed.degree} type="text" placeholder="Type here" className="input-md input w-full " 
+          <td className='whitespace-nowrap'><input value={ed.degree} type="text" placeholder="Type here" className="input-md input w-full " 
           onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_educational_background];
             updatePayloadEd[i].degree = e.target.value;
@@ -791,11 +826,11 @@ function ShowUser() {
 
     <thead>
       <tr>
-        <th>Company/Location</th>
-        <th>Position</th>
-        <th>Salary</th>
-        <th>Length of Service</th>
-        <th>Reason for Leaving</th>
+        <th className='tracking-wider'>Company/Location</th>
+        <th className='tracking-wider'>Position</th>
+        <th className='tracking-wider'>Salary</th>
+        <th className='tracking-wider'>Length of Service</th>
+        <th className='tracking-wider'>Reason for Leaving</th>
         <th className='flex justify-center items-center gap-2'>
           <div onClick={()=> addMoreData("Educational_history")} className='border w-12 flex justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -811,32 +846,32 @@ function ShowUser() {
         return (
           <tr key={i}>
           
-            <td><input type="text" value={eh.company} placeholder="Type here" className="input-md input w-full "  onChange={(e)=>{
+            <td className='whitespace-nowrap'><input type="text" value={eh.company} placeholder="Type here" className="input-md input w-full "  onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_history];
             updatePayloadEd[i].company = e.target.value;
             setEmpData({...empData, employee_history: updatePayloadEd});
           }} /></td>
-            <td><input type="text" value={eh.position} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+            <td className='whitespace-nowrap'><input type="text" value={eh.position} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_history];
             updatePayloadEd[i].position = e.target.value;
             setEmpData({...empData, employee_history: updatePayloadEd});
           }}/></td>
-            <td><input type="text" value={eh.salary} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+            <td className='whitespace-nowrap'><input type="text" value={eh.salary} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_history];
             updatePayloadEd[i].salary = e.target.value;
             setEmpData({...empData, employee_history: updatePayloadEd});
           }}/></td>
-            <td><input type="text" value={eh.length_of_service} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+            <td className='whitespace-nowrap'><input type="text" value={eh.length_of_service} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_history];
             updatePayloadEd[i].length_of_service = e.target.value;
             setEmpData({...empData, employee_history: updatePayloadEd});
           }} /></td>
-            <td><input type="text" value={eh.reason_for_leaving} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+            <td className='whitespace-nowrap'><input type="text" value={eh.reason_for_leaving} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
             const updatePayloadEd = [...empData.employee_history];
             updatePayloadEd[i].reason_for_leaving = e.target.value;
             setEmpData({...empData, employee_history: updatePayloadEd});
           }}/></td>
-            <td className='flex justify-center'>
+            <td className='flex justify-center whitespace-nowrap'>
               <div onClick={()=> removeData("Educational_history", i)} className={`border flex justify-center w-12 items-center p-2 rounded-md bg-red-700 text-white transition-all opacity-70 ${ empData.employee_history.length > 1 ? "cursor-pointer hover:opacity-100" : "cursor-not-allowed "}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -857,11 +892,11 @@ function ShowUser() {
 
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Occupation</th>
-        <th>Address</th>
-        <th>Contact #</th>
-        <th className='flex justify-center items-center gap-2'>
+        <th className='tracking-wider'>Name</th>
+        <th className='tracking-wider'>Occupation</th>
+        <th className='tracking-wider'>Address</th>
+        <th className='tracking-wider'>Contact #</th>
+        <th className='flex justify-center items-center tracking-wider gap-2'>
           <div onClick={()=> addMoreData("Reference")} className=' w-12 border flex justify-center items-center p-2 rounded-md bg-[#00b894] text-white transition-all opacity-70 hover:opacity-100 cursor-pointer'>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"  />
@@ -874,28 +909,28 @@ function ShowUser() {
     <tbody>
       {empData.employee_reference.map((er, i)=>{
           return (
-            <tr key={i}>
-              <td><input type="text" value={er.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+            <tr key={i} className='whitespace-nowrap'>
+              <td className='whitespace-nowrap'><input type="text" value={er.name} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
                 const updatePayloadEd = [...empData.employee_reference];
                 updatePayloadEd[i].name = e.target.value;
                 setEmpData({...empData, employee_reference: updatePayloadEd});
               }} /></td>
-              <td><input type="text" value={er.occupation} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+              <td className='whitespace-nowrap'><input type="text" value={er.occupation} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
                 const updatePayloadEd = [...empData.employee_reference];
                 updatePayloadEd[i].occupation = e.target.value;
                 setEmpData({...empData, employee_reference: updatePayloadEd});
               }}/></td>
-              <td><input type="text" value={er.address} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+              <td className='whitespace-nowrap'><input type="text" value={er.address} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
                 const updatePayloadEd = [...empData.employee_reference];
                 updatePayloadEd[i].address = e.target.value;
                 setEmpData({...empData, employee_reference: updatePayloadEd});
               }} /></td>
-              <td><input type="number" value={er.contact} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+              <td className='whitespace-nowrap'><input type="number" value={er.contact} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
                 const updatePayloadEd = [...empData.employee_reference];
                 updatePayloadEd[i].contact = e.target.value;
                 setEmpData({...empData, employee_reference: updatePayloadEd});
               }} /></td>
-              <td className='flex justify-center '>
+              <td className='flex justify-center whitespace-nowrap'>
                 <div onClick={()=> removeData("Reference", i)} className={`w-12 border flex justify-center items-center p-2 rounded-md bg-red-700 text-white transition-all opacity-70 ${empData.employee_reference.length > 1 ? "cursor-pointer hover:opacity-100": "cursor-not-allowed"}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -921,10 +956,10 @@ function ShowUser() {
 
     <thead>
       <tr>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
+        <th className='tracking-wider'></th>
+        <th className='tracking-wider'></th>
+        <th className='tracking-wider'></th>
+        <th className='tracking-wider'></th>
 
       </tr>
     </thead>
@@ -932,7 +967,7 @@ function ShowUser() {
 
       <tr>
         <td className="w-[10%]">Name:</td>
-        <td><input type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td className='whitespace-nowrap'><input type="text" value={empData.employee_case_emergency?.name || ""} placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {
@@ -942,7 +977,7 @@ function ShowUser() {
           })
         }} /></td>
         <td className="w-[10%]">Relationship:</td>
-        <td><input type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=> {
+        <td className='whitespace-nowrap'><input type="text" value={empData.employee_case_emergency?.relationship || ""} placeholder="Type here" className="input-md input w-full " onChange={(e)=> {
           setEmpData({
             ...empData,
             employee_case_emergency:{
@@ -955,7 +990,7 @@ function ShowUser() {
 
       <tr>
         <td className="w-[10%]">Address:</td>
-        <td><input  type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td className='whitespace-nowrap'><input  type="text" placeholder="Type here" value={empData.employee_case_emergency?.address || ""} className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {
@@ -965,7 +1000,7 @@ function ShowUser() {
           })
         }}/></td>
         <td className="w-[10%]">Contact Number:</td>
-        <td><input  type="text" placeholder="Type here" className="input-md input w-full " onChange={(e)=>{
+        <td className='whitespace-nowrap'><input  type="text" placeholder="Type here" value={empData.employee_case_emergency?.contact || ""} className="input-md input w-full " onChange={(e)=>{
           setEmpData({
             ...empData, 
             employee_case_emergency: {
@@ -978,9 +1013,21 @@ function ShowUser() {
     </tbody>
   </table>
 
+  <label className="form-control mt-2">
+  <div className="label">
+    <span className="label-text font-semibold">Reason for leaving:</span>
+  </div>
+  <textarea value={empData?.employee_reason_for_leaving === "null" ? "": empData?.employee_reason_for_leaving} className="textarea textarea-bordered h-24" disabled  placeholder="Reason here" onChange={(e)=> {
+     setEmpData({
+      ...empData, 
+      employee_reason_for_leaving:e.target.value
+    })
+  }}></textarea>
+ </label>
 
 
-  <p className=' opacity-65 text-sm mt-2 '>
+
+  <p className=' opacity-65 text-sm mt-6 '>
     I authorize investigation of any statement made on this application and understand that misrepresentation of any information can
     terminate any employment contract signed. I am willing to abide by the company rules and regulations and other memoranda that
     may issue.
@@ -992,7 +1039,7 @@ function ShowUser() {
       </svg>
       DELETE
       </button>
-    <button className="btn btn-success text-white" onClick={handleSubmitData}>SAVE INFORMATION</button>
+    <button className="btn bg-[#0984e3] hover:bg-[#0984e3] text-white" onClick={handleSubmitData}>SAVE INFORMATION</button>
   </div>
   </div>
 </div>

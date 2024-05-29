@@ -99,7 +99,7 @@ class DepartmentController extends Controller
         if($request->has("allDepartment")){
             $queryData = $queryData->get();
         }else{
-            $queryData = $queryData->paginate(5)->appends(['search' => $searchKeyword]);
+            $queryData = $queryData->paginate(10)->appends(['search' => $searchKeyword]);
         }
 
         foreach ($queryData as $qrData) {
@@ -209,6 +209,8 @@ class DepartmentController extends Controller
    
         $data = $request->validated();
 
+
+     
         $department = Department::find($id);
         
         if (!$department) {
@@ -218,18 +220,20 @@ class DepartmentController extends Controller
         }
      
 
-
-        DB::statement("
+        if ($request->has('action')) {
+            $department->update($data);
+        } else {
+        
+            DB::statement("
             UPDATE employees AS emp
             JOIN departments AS de ON emp.department_id = de.id
-            SET emp.employee_set_head = 0
-            WHERE de.id = ".$department->id." AND emp.employee_set_head = 1");
+            SET emp.employee_set_head = 0, de.department = '".$data['department']."'
+            WHERE de.id = ".$department->id." AND emp.employee_set_head = 1");        
         
-        DB::table('employees')
+            DB::table('employees')
             ->where('id', $data['employee_id'])
             ->update(['employee_set_head' => 1]);
-
-       
+        }
 
 
         return response()->json([
@@ -266,7 +270,7 @@ class DepartmentController extends Controller
         
         if($count->exist > 0){
             return response()->json([
-                "message" => "Some department you choose has already an employees you can't deleted it",
+                "message" => "Some departments you choose already an employees you can't delete it.",
             ], 422);
         }
 

@@ -60,7 +60,7 @@ class PositionController extends Controller
         $position = Position::create($data);
 
         return response()->json([
-            'message' => 'Position is created successfully',
+            'message' => 'Company position is created successfully',
             'error' => $data
         ], 200);
     }
@@ -82,6 +82,7 @@ class PositionController extends Controller
         $data = $request->validated();
         
         $position = Position::find($id);
+        
 
         if (!$position) {
             return response()->json([
@@ -107,9 +108,26 @@ class PositionController extends Controller
     public function destroy(Request $request)
     {
         $data = $request->all();
+   
+
+        $count = Position::query()
+        ->select(
+            DB::raw('count(*) as exist')
+        )
+        ->from('positions as p')
+        ->rightJoin('employees as em', 'p.id', '=' , 'em.position_id')
+        ->whereIn('p.id', $data)
+        ->first();
+
+        
+        if($count->exist > 0){
+            return response()->json([
+                "message" => "For some positions you choose already have employees you can't delete it."
+            ], 422);
+        }
 
         $deleted = Position::destroy($data);
-        
+
         if ($deleted === 0) {
             return response()->json([
                 'message' => 'No positions found to delete'

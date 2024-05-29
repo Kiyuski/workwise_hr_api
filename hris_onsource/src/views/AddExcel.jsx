@@ -30,15 +30,48 @@ function AddExcel() {
   
 
   const handleUploadToDatabase = () => {
-
+  
    axiosClient.post('/employee', {
       _employeeData,
       action: "Employee"
   }).then(()=>{
+
       _setUIemployeeData("");
       _setemployeeData("");
       alert("File is added to Database succesfully!");
       navigate("/employees")
+
+  }).catch((err)=>{
+
+   const {response} = err;
+
+   if(response &&  response.status  === 422){
+      if(response.data.errors){
+         let error_message = [];
+         Object.keys(response.data.errors).map(key => {
+            let message = response.data.errors[key][0]
+            error_message.push(message)
+         })
+
+         error_message = [...new Set(error_message)];
+     
+         swal({
+            title:"Oooopss,",
+            text: `The ${error_message.join(" and ")}.`,
+            icon: "error",
+            dangerMode: true,
+         })
+
+      }else{
+         swal({
+          title:"Oooopss,",
+          text: response.data.message,
+          icon: "error",
+          dangerMode: true,
+         })
+      }
+   }
+
   })
    
   };
@@ -100,8 +133,9 @@ const handlePositionChange = (e, rowIndex) => {
          return moment(new Date(excelStartDate.getTime() + (daysSinceExcelStart * 24 * 60 * 60 * 1000))).format('MM/DD/YYYY') || null;
       }
    
-   
-      parsedData.map(data => {
+      const filteredData = parsedData.filter(item => item.Employee_id !== undefined);
+
+      filteredData.map(data => {
        
          Data.push({
             employee_name: data.Employee,
@@ -130,7 +164,7 @@ const handlePositionChange = (e, rowIndex) => {
        })
 
      });
-
+   
      _setUIemployeeData(empData);
      _setemployeeData(Data);
      xlRef.current.value = "";
@@ -177,20 +211,27 @@ const handlePositionChange = (e, rowIndex) => {
        
                      <div className="mb-4 flex items-center justify-between">
                         <div className="flex-shrink-0 flex justify-center items-center gap-3" >
-                        <input ref={xlRef}  type="file" onChange={handleFileChange} className=" opacity-85 file-input file-input-md w-full max-w-xs file-input-success file:text-white text-gray-400" />
-                        <button type='button' onClick={parseExcelFile} className="btn btn-success text-white opacity-85">
+                        <input ref={xlRef}  type="file" onChange={handleFileChange} className=" opacity-60 file-input file-input-md w-full max-w-xs file-input-primary file:text-white text-gray-400" />
+                        <button type='button' onClick={parseExcelFile} className="btn bg-[#0984e3] hover:bg-[#0984e3] text-white opacity-85">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m0-3-3-3m0 0-3 3m3-3v11.25m6-2.25h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
                           </svg>
                         </button>
+                        <button type='button' className="btn btn-error text-white" onClick={()=>{
+                            _setemployeeData([]);
+                            _setUIemployeeData([]);
+                            xlRef.current.value = "";
+                        }}>CLEAR</button>
+                      
                         </div>
 
-                        <button type='button' onClick={handleUploadToDatabase} className="btn btn-success text-white opacity-85">
+                        <button type='button' onClick={handleUploadToDatabase} className="btn bg-[#0984e3] hover:bg-[#0984e3] text-white opacity-85">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                           </svg>
                         </button>
-                      
+
+          
                      </div>
              
                      <div className="flex flex-col mt-8">
@@ -204,7 +245,7 @@ const handlePositionChange = (e, rowIndex) => {
                                              EMPLOYEE NAME
                                           </th>
                                           <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                             ADDRESS & CONTACT #
+                                             ADDRESS & CONTACT NO
                                           </th>
                                            <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                              GENDER
@@ -230,11 +271,13 @@ const handlePositionChange = (e, rowIndex) => {
                                     {!_UIemployeeData?.length && (
                                         <tr>
                                           <td className="p-4 whitespace-nowrap text-sm font-normal text-gray-900" colSpan="4">
-                                            No data available.
+                                          <div>
+                                             <span className="font-bold opacity-80">Click the choose file to add Excel data of all employees.</span>
+                                          </div>
                                           </td>
                                         </tr>
                                     )}
-                                    {_UIemployeeData.length > 1 && _UIemployeeData?.map((emp, i)=>{
+                                    {_UIemployeeData.length > 0 && _UIemployeeData?.map((emp, i)=>{
                                           return (
                                                 <tr key={i}>
                                                 <td>
@@ -255,7 +298,7 @@ const handlePositionChange = (e, rowIndex) => {
                                                 </td>
                                                 <td>
                                                    <select onChange={(e)=> handleDepartmentChange(e, i)} value={emp.department_Id || ""}  className="select select-bordered">
-                                                      <option  defaultValue>Select here</option>
+                                                      <option   >Select here</option>
                                                       {department.map((de)=>{
                                                          return <option key={de.id} value={de.id}>{de.department}</option>
                                                       })}
@@ -264,7 +307,7 @@ const handlePositionChange = (e, rowIndex) => {
                                                 </td>
                                                 <td>
                                                    <select onChange={(e)=> handlePositionChange(e, i)} value={emp.position_Id || ""} className="select select-bordered">
-                                                      <option defaultValue>Select here</option>
+                                                      <option >Select here</option>
                                                       {position.map((pos)=>{
                                                          return <option key={pos.position_id} value={pos.position_id}>{pos.position}</option>
                                                       })}

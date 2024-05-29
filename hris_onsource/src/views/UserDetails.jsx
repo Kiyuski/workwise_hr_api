@@ -113,6 +113,7 @@ function UserDetails() {
            .then((dt) => {
              axiosClient.get(`/employee/${id}`)
              .then(({data : {data}})=>{
+   
                setLoading(false);
                setEmpData({...empData,
                  employee_provincial_address: data.employee_provincial_address ,
@@ -144,7 +145,7 @@ function UserDetails() {
                     length_of_service:"",
                     reason_for_leaving:""
                   }
-                 ]: data.employee_employment_history.length,
+                 ]: data.employee_employment_history,
                  employee_reference: !data.employee_character_reference.length ? [ {
                   name: "",
                   occupation:"",
@@ -189,14 +190,17 @@ function UserDetails() {
                     
 
                      {loading ? (
-                        <div className='ml-5'>
-                        <span className="loading loading-ring loading-lg text-primary"></span>
-                      </div>
+                        <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] h-[750px] flex justify-center items-center">
+                        <div className='ml-5 flex justify-center items-center gap-2'>
+                            <span className="loading loading-ring loading-lg text-primary"></span>
+                            <span className="font-bold opacity-80">Loading please wait...</span>
+                        </div>
+                   </div>
                      ) : (
                       <>
                        <div className="mb-4 flex items-center justify-between ml-8">
                        <div className="flex-shrink-0 flex justify-center items-center gap-3" >
-                       <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100' onClick={() => {
+                       <div className='shadow-md p-1 bg-[#0984e3] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100' onClick={() => {
                handlePrint(null, () => contentToPrint.current);
                }}>
                        

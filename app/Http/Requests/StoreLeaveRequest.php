@@ -25,8 +25,8 @@ class StoreLeaveRequest extends FormRequest
         return [
             "department_id" => 'numeric|required',
             "employee_id" => 'string|required',
-            "leave_type_id" => 'numeric|required|unique:leaves,leave_type_id,NULL,id,employee_id,' . request('employee_id'),
-            "leave_start_date" => 'string|required|unique:leaves,leave_start_date,NULL,id,employee_id,' . request('employee_id') . ',leave_end_date,' . request('leave_end_date'),
+            "leave_type_id" => 'required|unique:leaves,leave_type_id,NULL,id,employee_id,' . request('employee_id') . ',leave_start_date,' . request('leave_start_date'),
+            "leave_start_date" => 'string|after:leave_apply_date|required|unique:leaves,leave_start_date,NULL,id,employee_id,' . request('employee_id') . ',leave_end_date,' . request('leave_end_date'),
             "leave_end_date" => 'string|required|after:leave_start_date',
             "leave_apply_date" => 'string|required',
             "leave_reason" => 'string|required',

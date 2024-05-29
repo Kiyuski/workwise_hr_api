@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Notification;
+use App\Models\Leave;
 use App\Http\Requests\StoreNotificationRequest;
 use App\Http\Requests\UpdateNotificationRequest;
 use Illuminate\Support\Facades\DB;
+use App\Events\NotificationUpdateLeave;
 
 class NotificationController extends Controller
 {
@@ -101,7 +103,12 @@ class NotificationController extends Controller
     public function store(StoreNotificationRequest $request)
     {
         //
+        // $notification->owner = $res->employee_id;
+        
         $notification = Notification::create($request->validated());
+
+        event(new NotificationUpdateLeave($notification));
+
         return response()->json($notification, 201);
     }
 

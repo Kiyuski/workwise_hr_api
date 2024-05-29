@@ -21,10 +21,15 @@ class UpdateDepartmentRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
+        
+        $rules = [
             'department' => 'required',
-            'employee_id' => 'string|required|exists:employees,id',
         ];
+    
+        if (!$this->has('action')) {
+            $rules['employee_id'] = 'exists:employees,id';
+        }
+    
+        return $rules;
     }
 }

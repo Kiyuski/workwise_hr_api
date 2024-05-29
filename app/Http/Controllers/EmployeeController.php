@@ -9,7 +9,7 @@ use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Http\Request;
 use App\Http\Resources\EmployeeResource;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
@@ -44,7 +44,7 @@ class EmployeeController extends Controller
             return EmployeeResource::collection($results->get());
         }
 
-        $results = $results->paginate(5)->appends(['search' => $searchKeyword]);
+        $results = $results->paginate(10)->appends(['search' => $searchKeyword]);
 
         return EmployeeResource::collection($results);
 
@@ -66,7 +66,10 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        return new EmployeeResource(Employee::find($id));
+        $result = Employee::select('*', DB::raw('(SELECT COUNT(*) FROM leaves AS l WHERE l.employee_id = employees.id) AS total_leaves_have'))
+        ->where('id', $id)
+        ->first();
+        return new EmployeeResource($result);
     }
 
     /**
@@ -128,6 +131,8 @@ class EmployeeController extends Controller
     private function updateEmployee($data, $employee){
         $base64Image = $data['employee_image'] ?? null;
         $image = $base64Image;
+
+       
         
        if (strpos($base64Image, 'data:image/') === 0) {
        
@@ -162,7 +167,7 @@ class EmployeeController extends Controller
           
        } else {
 
-         
+
            $emp = $employee->update($data);
 
            return response()->json([
@@ -190,9 +195,10 @@ class EmployeeController extends Controller
         
             // Validation messages
             $messages = [
-                '_employeeData.*.employee_id' => 'Employee id is required',
-                '_employeeData.*.department_id.required' => 'Department is required',
-                '_employeeData.*.position_id.required' => 'Position is required',
+                '_employeeData.*.employee_id.unique' => 'employee id has already been taken',
+                '_employeeData.*.employee_id.required' => 'employee id is required',
+                '_employeeData.*.department_id.required' => 'department field is required',
+                '_employeeData.*.position_id.required' => 'position field is required',
             ];
         
             // Validate the request data
@@ -302,6 +308,7 @@ class EmployeeController extends Controller
         $image = $base64Image;
 
 
+
         if (strpos($base64Image, 'data:image/') === 0) {
        
             if (isset($employee['employee_image']) && is_string($employee['employee_image']) && \File::exists(public_path($employee['employee_image']))) {
@@ -336,7 +343,8 @@ class EmployeeController extends Controller
           
            
         } else {
-           
+          
+      
             $emp = $employee->update($request->except(
                 'action', 
                 'data', 

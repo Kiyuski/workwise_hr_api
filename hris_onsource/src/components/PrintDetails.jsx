@@ -1,6 +1,7 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useEffect } from 'react'
 export const PrintData = forwardRef((props, ref) => {
     const {empData} = props;
+    
   
     const status = ['Single', 'Married', 'Separated', 'Window(er)'];
 
@@ -238,7 +239,7 @@ export const PrintData = forwardRef((props, ref) => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {empData.employee_history.map((em, i) => {
+                                    {empData.employee_history.length && empData.employee_history.map((em, i) => {
                                         return (
                                             <tr key={i}>
                                                 <td className=' opacity-80 text-sm'>{em.company || "None"}</td>

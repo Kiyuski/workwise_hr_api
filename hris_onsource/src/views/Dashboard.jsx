@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react"
 import axiosClient from "../axiosClient";
 import DatePicker from "react-datepicker";
-import { useAuth } from "../context";
 import moment from "moment";
 import { Link } from "react-router-dom";
 
 
+
 function Dashboard() {
-    
 
     const [empRole, setRole] = useState("");
-
     const [userData, setUserData] = useState({
         employee_id: "",
         employee_image: "",
@@ -55,7 +53,13 @@ function Dashboard() {
                 setRole("FIRTS_USER");
                 return;
             }
-            setRole(role_of_employee || 'NOT_EMPLOYEED')
+
+            if(!role_of_employee || role_of_employee.trim() === "NOT EMPLOYED"){
+                setRole('NOT_EMPLOYEED')
+            }else{
+                setRole(role_of_employee)
+            }
+       
             const fetchNotif = role_of_employee === "HR" || role_of_employee === "ADMIN" ? axiosClient.get("/notification", {
                 params: {
                     for_admin_hr: true,
@@ -88,7 +92,6 @@ function Dashboard() {
        const check = totalEmployee.filter(e => e.employee_role === "HR" || e.employee_role === "ADMIN")
 
        if(!check){
-        
             axiosClient.post("/employee", {
                     employee_id: userData.employee_id,
                     employee_name: userData.employee_name,
@@ -100,8 +103,17 @@ function Dashboard() {
                     type:'setAccount',
                 })
             .then(({data}) => {
-                alert(data.message);
-                window.location.href = '/dashboard'
+
+                document.getElementById('my_modal_5').close();
+                swal({
+                    title: "Good job!",
+                    text: data.message,
+                    icon: "success",
+                    button: "Okay!",
+                  });
+         
+                  window.location.href = "/dashboard"
+
             
             }).catch((er)=>{
                 console.log(er);
@@ -109,21 +121,47 @@ function Dashboard() {
 
        }else{
         
-        const res = totalEmployee.find(e => e.employee_id.trim() === userData.employee_id)
+        const res = totalEmployee.find(e => e.employee_id?.trim() === userData.employee_id)
+     
+
         const url = {
             employee_email: userData.employee_email,
             employee_image: userData.employee_image || "",
         }
+ 
 
+       
         if(res){
+
+            
+            if(res?.employee_status?.trim() === "Inactive"){
+                document.getElementById('my_modal_5').close();
+                swal({
+                    title: "Oooops!",
+                    text: "Your employee ID is Inactive, please contact HR or ADMIN for more details!",
+                    icon: "warning",
+                    dangerMode: true,
+                })
+                return;
+            }
+          
+
             if(!res.employee_email){
+            
                 axiosClient.put(`/employee/${res.id}?${new URLSearchParams(url).toString()}`,{
                         action:'Employee_set_account',
                 })
                .then(() => { 
-    
-                alert("Your account is set successfully as an employee.");
-                window.location.href = '/dashboard'
+                document.getElementById('my_modal_5').close();
+
+                swal({
+                    title: "Good job!",
+                    text: `Your account is set successfully as an employee.`,
+                    icon: "success",
+                    button: "Okay!",
+                  });
+                
+                  window.location.href = "/dashboard"
     
                }).catch((er)=>{
                 console.log(er);
@@ -132,13 +170,34 @@ function Dashboard() {
             }
 
 
-            alert("EMPLOYEE ID IS ALREADY USED, PLEASE TRY ANOTHER ONE");
+            document.getElementById('my_modal_5').close();
+            swal({
+                title: "Oooops!",
+                text: "EMPLOYEE ID is already used, please try another again!",
+                icon: "warning",
+                dangerMode: true,
+              })
+         
+            return;
         
         }else{
+            document.getElementById('my_modal_5').close();
             if(!userData.employee_id){
-                alert("INPUT THE EMPLOYEE ID PLEASE...")
+                swal({
+                    title: "Oooops!",
+                    text: "Input the EMPLOYEE ID please...",
+                    icon: "warning",
+                    dangerMode: true,
+                  })
+                  return;
             }
-            alert("EMPLOYEE ID NOT FOUND!") 
+            swal({
+                title: "Oooops!",
+                text: "Looks like, EMPLOYEE ID you entered is not a valid employee.",
+                icon: "warning",
+                dangerMode: true,
+              })
+            return;
         }
       
        }
@@ -147,11 +206,16 @@ function Dashboard() {
 
 
       
-      if(load){
+    if(load){
         return (
-            <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
-                <div className='ml-5'>
-                    <span className="loading loading-ring loading-lg text-primary"></span>
+            <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] h-[750px] flex justify-center ">
+                <div className="flex flex-col gap-4 w-full m-8">
+                    <div className="skeleton h-72 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
                 </div>
            </div>  
         )
@@ -166,7 +230,7 @@ function Dashboard() {
                     <div className="px-6 pt-6 2xl:container ">
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 ">
 
-                            {empRole === "HR" && (
+                            {empRole === "HR" || empRole === "ADMIN" ? (
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
                                 <div className="bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-[#0984e3] to-[#0984e3] text-white shadow-[#0984e3]/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="w-6 h-6 text-white">
@@ -174,19 +238,21 @@ function Dashboard() {
                                     </svg>
                                 </div>
                                 <div className="p-4 text-right">
-                                    <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Total Employees</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{totalEmployee && totalEmployee.length}</h4>
+                                    <p className="block antialiased font-sans text-sm leading-normal font-semibold uppercase text-blue-gray-600">Total Employees</p>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-normal leading-snug text-blue-gray-900">{totalEmployee && totalEmployee.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
-                                    <div className='border w-[30%] p-2 text-sm rounded-md flex gap-2 justify-center items-center bg-[#0984e3] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
+                                    <div className='border w-full p-2 text-sm rounded-md flex gap-2 justify-center items-center bg-[#0984e3] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className ="w-6 h-6">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                     </svg>
         
-                                        <Link to="/employees" className="text-sm">View User</Link>
+                                        <Link to="/employees" className="text-sm uppercase ">View User</Link>
                                     </div>
                                 </div>
                             </div>
+                            ): (
+                                <></>
                             )}
         
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
@@ -197,22 +263,22 @@ function Dashboard() {
         
                                 </div>
                                 <div className="p-4 text-right">
-                                    <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Notifications</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{totalNotifications &&  totalNotifications.length}</h4>
+                                    <p className="block antialiased font-sans text-sm leading-normal font-semibold text-blue-gray-600 uppercase">Notifications</p>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-normal leading-snug text-blue-gray-900">{totalNotifications &&  totalNotifications.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
-                                <div className='border w-[40%] p-2 rounded-md flex gap-2 justify-center items-center bg-[#00b894] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
+                                <div className='border w-full p-2 rounded-md flex gap-2 justify-center items-center bg-[#00b894] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                 </svg>
         
-                                        <Link to="/notification" className="text-sm">Notifications</Link>
+                                        <Link to="/notification" className="text-sm uppercase">Notifications</Link>
                                     </div>
                                 </div>
                             </div>
 
 
-                            {empRole?.trim() === "HR"  && (
+                            {empRole?.trim() === "HR" || empRole === "ADMIN"  ? (
                             <div className="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
                                 <div className="bg-clip-border  mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-[#ff7675] to-[#ff7675] text-white shadow-[#ff7675]/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
                                 
@@ -223,19 +289,21 @@ function Dashboard() {
         
                                 </div>
                                 <div className="p-4 text-right">
-                                    <p className="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Pending leaves</p>
-                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{pendingLeave && pendingLeave.length}</h4>
+                                    <p className="block antialiased font-sans text-sm leading-normal font-semibold text-blue-gray-600 uppercase">Pending leaves</p>
+                                    <h4 className="block antialiased tracking-normal font-sans text-2xl font-normal leading-snug text-blue-gray-900">{pendingLeave && pendingLeave.length}</h4>
                                 </div>
                                 <div className="border-t border-blue-gray-50 p-4">
-                                <div className='border w-[40%] p-2 rounded-md flex gap-2 justify-center items-center bg-[#ff7675] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
+                                <div className='border w-full p-2 rounded-md flex gap-2 justify-center items-center bg-[#ff7675] text-white font-bold cursor-pointer transition-all ease-in opacity-80 hover:opacity-100'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
                                 </svg>
         
-                                        <Link to="/leave" className="text-sm">View now</Link>
+                                        <Link to="/leave" className="text-sm uppercase">View now</Link>
                                     </div>
                                 </div>
                             </div>
+                            ): (
+                                <></>
                             )}
         
                            
@@ -253,8 +321,9 @@ function Dashboard() {
                 <>
                 <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
                     <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
+              
                         <div className="hero min-h-screen bg-base-200">
-                            <div className="hero-content text-center">
+                            <div className="hero-content text-center ">
                                 <div>
                                     <h1 className="text-5xl font-bold">Hi there, Welcome to Workwise<span className="text-[#00b894]">HR.</span></h1>
                                         <p className="py-6 opacity-70 font-medium">Ooopps, looks like you don't have a position yet. <br></br> Please use your <span className="font-bold text-red-500">EMPLOYEE ID</span> to become an employee.</p> 
@@ -263,6 +332,7 @@ function Dashboard() {
                                         document.getElementById('my_modal_5').showModal();
                                         axiosClient.get("/user")
                                         .then((user)=>{
+                                    
                                             setUserData({
                                                 ...userData,
                                                 employee_email:user.data.email,
@@ -294,8 +364,8 @@ function Dashboard() {
                 <div className="avatar mt-5 w-full flex-col flex justify-center items-center gap-3">
                 </div>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
-                  Employee ID#
-                   <input value={userData.employee_id || ""}   type="text" className="grow" placeholder="i.g Onsoure000***" onChange={(e)=> setUserData({...userData, employee_id: e.target.value })} />
+                  Employee ID
+                   <input value={userData.employee_id || ""}   type="text" className="grow" placeholder="i.g xxxxxxxxx" onChange={(e)=> setUserData({...userData, employee_id: e.target.value })} />
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
                    Email
@@ -310,6 +380,7 @@ function Dashboard() {
         </dialog>
                 </>
             )
+            
       
         default:
             return (
@@ -355,7 +426,7 @@ function Dashboard() {
                 <div className="avatar mt-5 w-full flex-col flex justify-center items-center gap-3">
                 </div>
                 <label className="input input-bordered mt-2 flex items-center gap-2">
-                  Employee ID#
+                  Employee ID
                    <input value={userData.employee_id || ""}   type="text" className="grow" placeholder="i.g Onsoure000***" onChange={(e)=> setUserData({...userData, employee_id: e.target.value })} />
                 </label>
                 <label className="input input-bordered mt-2 flex items-center gap-2">

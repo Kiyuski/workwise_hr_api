@@ -13,6 +13,7 @@ class Employee extends Model
 
     protected $fillable = [
         "id",
+        'employee_set_head',
         "employee_id",
         "employee_name",
         "employee_email",
@@ -37,6 +38,7 @@ class Employee extends Model
         "employee_birth_place",
         "employee_civil_status",
         "employee_spouse",
+        "employee_reason_status",
         "employee_name_of_spouse",
         "employee_company",
         "employee_father",

@@ -19,7 +19,7 @@ function GuestLayout() {
       <Outlet />
       </div>
       <div className='flex-1 flex justify-center items-center mr-48 max-sm:hidden'>
-       <img src="undraw_secure_login_pdn4.svg" alt="secure_login" srcSet="" />
+       <img src="undraw_secure_login_pdn_for_hr.svg" alt="secure_login" srcSet="" />
       </div>
     </div>
   )

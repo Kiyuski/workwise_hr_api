@@ -25,29 +25,29 @@ class StoreEmployeeRequest extends FormRequest
 
         if($this->has('type')){
             $rules = [
-                'employee_id' => 'string|required',
-                'employee_name' => 'string|max:255|required',
-                'employee_email' => 'string|max:255|email|unique:employees,employee_email',
-                'employee_role' => 'required|max:255|string',
-                'employee_status' => 'string|required',
-                'employee_image' => 'string|nullable',
-                'employee_start_date' => 'string|nullable|required',
+                'employee_id' => 'required',
+                'employee_name' => 'max:255|required',
+                'employee_email' => 'max:255|email|unique:employees,employee_email',
+                'employee_role' => 'required|max:255',
+                'employee_status' => 'required',
+                'employee_image' => 'nullable',
+                'employee_start_date' => 'nullable|required',
             ];
         }elseif($this->has("_employeeData")){
             $rules =  ['_employeeData' => 'array|required'];
         }else{
             $rules = [
-                'employee_id' => 'string|required',
-                'employee_name' => 'string|max:255',
-                'employee_email' => 'string|max:255|email|unique:employees,employee_email',
+                'employee_id' => 'required',
+                'employee_name' => 'max:255',
+                'employee_email' => 'max:255|email|unique:employees,employee_email',
                 'employee_phone' => 'numeric|nullable',
-                'employee_address' => 'string|max:255|required',
-                'employee_gender' => 'string|max:255|required',
+                'employee_address' => 'max:255|required',
+                'employee_gender' => 'max:255|required',
                 'employee_role' => 'required|max:255|string',
                 'employee_image' => 'string|nullable',
                 'employee_status' => 'string|required',
-                'department_id' => 'numeric|required',
-                'position_id' => 'numeric|required',
+                'department_id' => 'required',
+                'position_id' => 'required',
                 'employee_start_date' => 'string|nullable|required',
                 'employee_end_date' => 'string|nullable',
             ];

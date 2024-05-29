@@ -1,7 +1,13 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import * as XLSX from 'xlsx/xlsx.mjs';
+import newSKU from "../../newSKU.json";
+import updatedSKU from "../../updatedSKU.json";
+
 
 function PartNumberToArray() {
+
+  
+
     const xlRef = useRef(null);
     const [file, setFile] = useState(null);
     const handleFileChange = (e) => {
@@ -22,6 +28,8 @@ function PartNumberToArray() {
     
       };
 
+
+     
     const parseExcelFile = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -33,14 +41,34 @@ function PartNumberToArray() {
     
         const [headers, ...rows] = excelData;
         const parsedData = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
-        console.log(Object.values(parsedData).map(d => d['Part Number']));
-      
+       
+         const insertData = parsedData.filter(item => item['Not Allowed'] !== true).map(item => item['Part Number'])
+        //  const dataToRemove = parsedData.filter(item => item['Not Allowed'] === true).map(item => typeof item['Part Number'] === "number" ?  parseInt(item['Part Number']): item['Part Number'] )
+     
+
+        let dt  = [...newSKU];
+
+        
+        insertData.forEach(item => {
+          
+            if (!dt.includes(item)) {
+                dt.push(item);
+            }
+        });
+
+        // console.log("Updated array1:", dt);
+        console.log(updatedSKU);
+
+ 
+
+
+         
         };
         reader.readAsArrayBuffer(file);
     }
   return (
     <div>
-        <div className="flex-shrink-0 flex justify-center items-center gap-3" >
+        <div className="flex-shrink-0 flex justify-center items-center gap-3 mt-5" >
           <input ref={xlRef}  type="file" onChange={handleFileChange} className=" opacity-85 file-input file-input-md w-full max-w-xs file-input-success file:text-white text-gray-400" />
           <button type='button' onClick={parseExcelFile} className="btn btn-success text-white opacity-85">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
@@ -49,7 +77,7 @@ function PartNumberToArray() {
           </button>
 
           <div>
-              {JS}
+         
           </div>
         </div>
     </div>

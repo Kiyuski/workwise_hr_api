@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment'
-function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id, setReuseDataId, load, childtitle}) {
+function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id, setReuseDataId, load, childtitle, error, setError, buttonLoad}) {
 
   return (
     <dialog id="my_modal_5" className="modal">
@@ -15,7 +15,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
         setReuseDataId("")
         setPayload({})
       }}>
-        <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        <button  className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
       </form>
       <h3 className="font-bold text-lg">{data_id ? 'UPDATE':'ADD'} {title === "LEAVE APPLICATION" ? childtitle : title}</h3>
         <label className="form-control w-full mt-2">
@@ -27,14 +27,18 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                      <span className="label-text">Leave type:</span>
                  </div>
                  <select value={payload.leave_type || ""} name='leave_type'  className="select select-bordered w-full  uppercase font-semibold opacity-80" onChange={(e)=> {
-                    const leaveNumberOfDays = e.target.options[e.target.selectedIndex].dataset.numberOfDays;
-                    setPayload({...payload, [e.target.name]:e.target.value, days:leaveNumberOfDays})
+        
+                       const leaveNumberOfDays = e.target.options[e.target.selectedIndex].dataset.numberOfDays;
+                       setPayload({...payload, [e.target.name]:e.target.value, days:leaveNumberOfDays , start_date: "", end_date: ""})
+
+
                  }}>
-                    <option  >Select here</option>
+                    <option className='cursor-not-allowed' >Select here</option>
                     {data.map((Ltype, i)=>{
                         return <option key={i} value={Ltype.id}  data-number-of-days={Ltype.leave_number_of_days}>{Ltype.leave_type} {`(${Ltype.leave_number_of_days} ${Ltype.leave_number_of_days > 1 ? "days": "day"}) `}</option>
                     })}
                  </select>
+                 <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_type_id']}</p>
              </label>
              {payload?.hris_hr_or_admin?.length > 0 ? 
              (
@@ -72,6 +76,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                         <span className="label-text">{title.charAt(0).toUpperCase() + title.slice(1).toLowerCase()}:</span>
                     </div>
                     <input type="text" value={payload.name || ""} name='name'  placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                    <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['holiday']}</p>
                 </>
             )}
 
@@ -81,6 +86,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                         <span className="label-text">{title.charAt(0).toUpperCase() + title.slice(1).toLowerCase()}:</span>
                     </div>
                     <input type="text" value={payload.name || ""} name='name'  placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                    <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_type']}</p>
                 </>
             )}
 
@@ -94,6 +100,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
             <input type="date"  value={payload.apply_date || ""} name='apply_date' placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> {
                 setPayload({...payload, [e.target.name]:e.target.value})
             }}  />
+               <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_apply_date'] }</p>
         </label>
         )}
         
@@ -106,6 +113,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
             <input type="date" value={payload.start_date || ""} name="start_date" placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> {              
                 setPayload({...payload, [e.target.name]:e.target.value})
             }} />
+            <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['holiday_start_date']}</p>
         </label>
 
         <label className="form-control w-full">
@@ -113,6 +121,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                 <span className="label-text">End Date:</span>
             </div>
             <input type="date" value={payload.end_date || ""} name="end_date" placeholder="Type here" className="input input-bordered w-full"  onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+            <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['holiday_end_date']}</p>
         </label>
         </>
     )}
@@ -124,14 +133,22 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                         <span className="label-text">Start Date:</span>
                     </div>
                     <input type="date" value={payload.start_date || ""} name="start_date" placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> {
-                        if(!payload.leave_type) {
-                            alert("Leave type is missing, please add again.")
+                        if(payload.leave_type === "Select here") {
+                            setError({
+                                leave_type_id: "Leave type id field is required."
+                            })
+                            setTimeout(() => {
+                                setError(null)
+                            }, 3000);
                             return;
+                        }else{
+                            const newDate = new Date(e.target.value);
+                            newDate.setDate(newDate.getDate() + payload.days)
+                            setPayload({...payload, [e.target.name]:e.target.value, end_date:moment(newDate).format("YYYY-MM-DD")})
                         }
-                        const newDate = new Date(e.target.value);
-                        newDate.setDate(newDate.getDate() + payload.days)
-                        setPayload({...payload, [e.target.name]:e.target.value, end_date:moment(newDate).format("YYYY-MM-DD")})
+                        
                     }} />
+                           <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_start_date'] }</p>
                 </label>
 
                 <label className="form-control w-full">
@@ -139,6 +156,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                         <span className="label-text">End Date:</span>
                     </div>
                     <input type="date" value={payload.end_date || ""} name="end_date" placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                    <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_end_date'] }</p>
                 </label>
 
                 <label className="form-control w-full">
@@ -146,6 +164,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                         <span className="label-text">Reason to leave:</span>
                     </div>
                 <textarea value={payload.leave_reason} name='leave_reason' className="textarea textarea-bordered w-full" placeholder="Bio" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} ></textarea>
+                <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_reason'] }</p>
                 </label>
                 </>
             )}
@@ -159,6 +178,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                     <span className="label-text">Number of Days:</span>
                 </div>
                 <input type="number" value={payload.number_of_days || ""} name="number_of_days" placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_number_of_days']}</p>
             </label>
             <label className="form-control w-full">
                 <div className="label">
@@ -169,6 +189,7 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="INACTIVE">INACTIVE</option>
                 </select>
+                <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['leave_status']}</p>
             </label>
             </>
         )}
@@ -295,12 +316,20 @@ function Modal({title, payload, setPayload, handleSubmitPayload,  data, data_id,
                     <span className="label-text">Year:</span>
                 </div>
                 <input value={payload.year || ""} name="year" type="month" placeholder="Type here" className="input input-bordered w-full" onChange={(e)=> setPayload({...payload, [e.target.name]:e.target.value})} />
+                <p  className="text-red text-xs italic mt-2 text-red-500 ml-2 error-message">{error && error['holiday_year']}</p>
             </label>
         )}
       
      
         <div className="modal-action w-full">
-            <button type='submit' className="btn btn-success text-white w-full" onClick={handleSubmitPayload}>{data_id ? 'UPDATE': 'SUBMIT'}</button>
+            <button type='button' className="btn bg-[#0984e3] hover:bg-[#0984e3] text-white w-full" onClick={handleSubmitPayload}>
+                {buttonLoad ? (
+                    <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    PLEASE WAIT..
+                    </>
+                ): data_id ? 'UPDATE': 'SUBMIT'}
+            </button>
         </div>
 
 

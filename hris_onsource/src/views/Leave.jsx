@@ -13,6 +13,7 @@ function Leave() {
   const [showTabs, setShowTabs] = useState(false);
   const [showButton, setShowButton] = useState(true);
   const [payload, setPayload] = useState({});
+  const [buttonLoad, setButtonLoad] = useState(false);
   const [department, setDepartment] = useState([])
   const [data, setData] = useState([]);
   const [department_id, setDepartment_id] = useState("")
@@ -23,11 +24,11 @@ function Leave() {
   const [loadPage, setLoadPage] = useState(false);
   const [employee_data, setEmployee_data] = useState({});
   const [loadTable, setLoadTable] = useState(false);
-  const [forHRIS_head_request, setForHRIS_head_request] = useState(false)
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const [pagination, setPagination] = useState([]);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState(null);
 
 
 
@@ -253,6 +254,8 @@ function Leave() {
 
 
 const getEmployeeDetails = () => {
+  setTabIndex(0)
+  setData([])
   setLoadTable(true)
   setLoadPage(true);
   Promise.all([
@@ -342,7 +345,7 @@ const getEmployeeDetails = () => {
             }
           })
          
-         
+      
           setDepartment_id(employee_department_id)
           setLoadTable(false);
           setData(data.data);
@@ -367,27 +370,43 @@ const getEmployeeDetails = () => {
 
     axiosClient.delete(`/${path}/${id}`)
       .then(()=>{
+
+          let message = "";
+
           switch (path) {
             case 'holiday':
               getHoliday();
-              alert(`${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`);
+              message = `${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`;
               break;
           case 'leave_type':
               getLeaveType()
-              alert(`${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`);
+              message = `${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`;
               break;
           case 'leave':
               getAllLeave('single')
-              alert(`${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`);
+              message = `${path.charAt(0).toUpperCase() + path.slice(1).toLowerCase()} item is deleted successfully!`;
               break;
             default:
               break;
           }
+
+          swal({
+            title: "Good job!",
+            text: message,
+            icon: "success",
+            button: "Okay!",
+          });
       })
       .catch((err)=>{
          const {response} = err;
          if(response &&  response.status  === 422){
-           console.log(response.data)
+          swal({
+            title: "Oooops!",
+            text: response.data.message,
+            icon: "error",
+            dangerMode: true,
+          })
+
         }
     })
    
@@ -398,6 +417,7 @@ const getEmployeeDetails = () => {
 
 
  const showReusableData = (id, param = null, path) => {
+   
   
    document.getElementById('my_modal_5').showModal()
    setModalLoad(true)
@@ -468,7 +488,7 @@ const getEmployeeDetails = () => {
    .catch((err)=>{
       const {response} = err;
       if(response &&  response.status  === 422){
-        console.log(response.data)
+        console.log(response.data.message)
       }
    })
  }
@@ -495,6 +515,9 @@ const getEmployeeDetails = () => {
 
 
   const handleSubmitPayload = () => {
+
+    setButtonLoad(true);
+
     let request;
     let _payload;
 
@@ -528,10 +551,6 @@ const getEmployeeDetails = () => {
         case 'LEAVE APPLICATION':
 
  
-        if(!payload.leave_type){
-          alert("Please select leave type")
-          return;
-        }
 
         if(payload.days){
           delete payload.days;
@@ -552,19 +571,18 @@ const getEmployeeDetails = () => {
           employee_approval_role:  payload.emp_role === undefined ? department.employee_role : payload.emp_role
          }
         
+          
         
-      
          if(parseInt(tabsLinks[tabIndexChild].id) === 2 || parseInt(tabsLinks[tabIndexChild].id) === 0){
           delete _payload.employee_id
           _payload.leave_status_date_time = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
          }
 
-         
-         if(!payload.employee_approval_id){
+         if(!payload.employee_id){
           alert("DON'T HAVE A DEPARTMENT HEAD , PLEASE CONTACT HR OR ADMIN FOR THAT POSITION.");
           return;
          }
-
+   
          request = _id ? axiosClient.put(`/leave/${_id}?${new URLSearchParams(_payload).toString()}`) : axiosClient.post('/leave',_payload);
         break;
     
@@ -574,8 +592,18 @@ const getEmployeeDetails = () => {
     }
 
     request.then(({data})=>{
+        setButtonLoad(false)
+        setPayload({})
+        document.getElementById('my_modal_5').close()
         setData([]);
-        alert(data.message);
+        setReuseDataId("")
+ 
+        swal({
+          title: "Good job!",
+          text: data.message,
+          icon: "success",
+          button: "Okay!",
+        });
 
         switch (tabs[tabIndex].text) {
           case 'HOLIDAYS':
@@ -606,14 +634,19 @@ const getEmployeeDetails = () => {
       
     })
     .catch((err)=>{
-        const {response} = err;
-        if(response &&  response.status  === 422){
-          console.log(response.data)
-        }
+      const {response} = err;
+      if(response &&  response.status  === 422){
+        setButtonLoad(false)
+        setError(response.data.errors)
+        setTimeout(() => {
+          setError(null)
+        }, 3000);
+      
+      }
     })
-       setReuseDataId("")
-       setPayload({})
-      document.getElementById('my_modal_5').close()
+      
+       
+      
   }
 
 
@@ -670,7 +703,7 @@ const getEmployeeDetails = () => {
   
     return dataTabs.map((tab) => {
       return (
-        <div role="tab" tabIndex={0}  key={tab.id} className={`tab ${tab.id === tabIndex  && "bg-[#00b894] text-white"} dropdown dropdown-bottom  font-bold`} 
+        <div role="tab" tabIndex={0}  key={tab.id} className={`tab ${tab.id === tabIndex  && "bg-[#0984e3] text-white"} dropdown dropdown-bottom  whitespace-nowrap  font-bold`} 
         onClick={()=> {
           handleShowType(tab.id)
           if(tab.id !== 2){
@@ -678,12 +711,13 @@ const getEmployeeDetails = () => {
           }
         }}
         >
-          {tab.id === 2 ? tabsLink.find(d =>  parseInt(d.id) === parseInt(tabIndexChild))?.text : tab?.text}
+          <span className=' max-md:text-[11px]'>{tab.id === 2 ? tabsLink.find(d =>  parseInt(d.id) === parseInt(tabIndexChild))?.text : tab?.text}</span>
           {tab.id === 2 &&  (
-            <ul  className="dropdown-content text-black  z-[1] menu mt-3 ml-10 p-2 shadow bg-base-100 rounded-box w-60">
+           
+            <ul  className="dropdown-content text-black  z-[1] menu mt-3 ml-10 p-2 shadow bg-base-100 rounded-box w-60 max-md:mr-20">
               {tabsLink.map((tab,i)=>{
                 return (
-                  <li  key={i} className={`${tabIndexChild === tab.id ? "bg-[#00b894] rounded-box text-white " : "text-black"} `} onClick={()=> {
+                  <li  key={i} className={`${tabIndexChild === tab.id ? "bg-[#0984e3] rounded-box text-white " : "text-black"} `} onClick={()=> {
                      setSearch("")
                     handleShowTab(tab.id)
                   }} ><a>{tab?.text}</a></li>
@@ -691,6 +725,7 @@ const getEmployeeDetails = () => {
               })}
               
             </ul>
+      
           )}
    
         </div>
@@ -704,11 +739,16 @@ const getEmployeeDetails = () => {
 
   if(loadPage){
     return (
-      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
-        <div className='ml-5'>
-            <span className="loading loading-ring loading-lg text-primary"></span>
-        </div>
-      </div>  
+      <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%] h-[750px] flex justify-center ">
+         <div className="flex flex-col gap-4 w-full m-8">
+                    <div className="skeleton h-72 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-full"></div>
+          </div>
+    </div>  
     )
   }
 
@@ -717,17 +757,19 @@ const getEmployeeDetails = () => {
     <>
     <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
     <div className="bg-white shadow rounded-lg p-4 sm:p-6 xl:p-8 m-5">
-                 <div className="relative flex gap-2 items-center  focus-within:text-[#00b894] mb-7">
+                <div className=' max-md:flex max-md:flex-col-reverse'>
+          
+                 <div className="relative flex gap-2 items-center  focus-within:text-[#0984e3] lg:mb-7 max-md:mt-2">
                                  <span className="absolute left-4 h-6 flex items-center pr-3 border-r border-gray-300">
                                  <svg xmlns="http://ww50w3.org/2000/svg" className="w-4 fill-current" viewBox="0 0 35.997 36.004">
                                     <path id="Icon_awesome-search" data-name="search" d="M35.508,31.127l-7.01-7.01a1.686,1.686,0,0,0-1.2-.492H26.156a14.618,14.618,0,1,0-2.531,2.531V27.3a1.686,1.686,0,0,0,.492,1.2l7.01,7.01a1.681,1.681,0,0,0,2.384,0l1.99-1.99a1.7,1.7,0,0,0,.007-2.391Zm-20.883-7.5a9,9,0,1,1,9-9A8.995,8.995,0,0,1,14.625,23.625Z"></path>
                                  </svg>
                                  </span>
-                                 <input type="search"  name="leadingIcon" value={search} onChange={handleSearchPosition} id="leadingIcon" placeholder={`Search ${tabIndex === 2 ? tabsLinks[tabIndexChild].text === "YOUR LEAVE APPLICATION" ? "leave type or leave status": "employee name, leave type or leave status" : tabs[tabIndex].text.toLowerCase()} here`} className="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-[#00b894] transition"/>
+                                 <input type="search"  name="leadingIcon" value={search} onChange={handleSearchPosition} id="leadingIcon" placeholder={`Search ${tabIndex === 2 ? tabsLinks[tabIndexChild].text === "YOUR LEAVE APPLICATION" ? "leave type or leave status": "employee name, leave type or leave status" : tabs[tabIndex].text.toLowerCase()} here`} className="w-full pl-14 pr-4 py-2.5 rounded-xl text-sm text-gray-600 outline-none border border-gray-300 focus:border-[#0984e3] transition"/>
                                 
                 </div>
 
-               <div className="mb-4 flex items-center justify-between">
+               <div className="mb-4 flex items-center justify-between max-md:flex-col-reverse max-md:gap-6">
                 <div role="tablist" className="tabs tabs-boxed">
                     <ComponentShowTabs 
                     emp_role={ruleCanAccess} 
@@ -745,55 +787,55 @@ const getEmployeeDetails = () => {
           
                   {showButton && (
                   <div className="flex-shrink-0 flex justify-center items-center gap-3" onClick={()=>  {
-                   
-                
                     document.getElementById('my_modal_5').showModal()
                     if(parseInt(tabIndex) === 2) {
-                      if(!department_id) return alert("You don't have a department please update your account and add a department.");
-                      setModalLoad(true);
+                      setModalLoad(true)
+                      if(!department_id) {
+                        return alert("You don't have a department please update your account and add a department.");
+                      }
 
+                    
                       let fetCher;
+                    
                       if(employee_data.department_head_id === employee_data.id){
                         fetCher = axiosClient.get(`/department/${department_id}`, {
                           params: {
                             type: "get_hr_and_admin"
                           }
                         }) 
-                        setForHRIS_head_request(true)
-
                       }else{
                         fetCher =  axiosClient.get(`/department/${department_id}`)
-                        setForHRIS_head_request(false)
                       }
                    
       
-                
+                     
                       Promise.all([
                         fetCher,
                         getDataList('employee'),
                         getDataList('user')
                        ])
                         .then((data) => {
-                        
                              setModalLoad(false)
                              const EmpId = data[1].data.find(emp => emp.employee_email === data[2].email).id;
-                           
                              setDepartment(data[0].data.data)
                              setPayload({...payload, department_head: data[0].data.data.department_status,  
                               employee_id: EmpId,
-                              hris_hr_or_admin: data[0].data.data || []
+                              hris_hr_or_admin: Array.isArray(data[0].data.data) ? data[0].data.data.filter(d => d.head_id !== employee_data.department_head_id) : []
                             });
-                            
+                       
                              getLeaveType(true) 
                          
                           })
                           .catch((err) => {
                               console.error(err);
                           });
+                       
+                      
                     }
+
       
                   }}>
-                  <div className='shadow-md p-1 bg-[#00b894] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'>
+                  <div className='shadow-md p-1 bg-[#0984e3] rounded-md text-white cursor-pointer transition-all ease-in opacity-75 hover:opacity-100'>
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                       </svg>
@@ -801,6 +843,7 @@ const getEmployeeDetails = () => {
                         <span className='font-bold opacity-70'>ADD {tabIndex === 2 ? tabsLinks[tabIndexChild]?.text : tabs[tabIndex]?.text}</span> 
                   </div>
                   )}
+                </div>
                </div>
                {loadTable && (
                     <div className="mb-6 mt-5 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
@@ -841,7 +884,7 @@ const getEmployeeDetails = () => {
               <div className="join w-full justify-end mt-6">
                   {pagination.length > 0  && pagination.map((p, i) => {
                         return (
-                           <button key={i} disabled={p.url ? false:true}   className={`join-item btn ${p.active ? "btn-active bg-[#00b894] text-white  hover:bg-[#00b894]" : ""} `}   dangerouslySetInnerHTML={{ __html: p.label }} onClick={()=> handleUrlPaginate(p.url, tabIndex === 2 ? tabsLinks[tabIndexChild].text : tabs[tabIndex].text)}></button>
+                           <button key={i} disabled={p.url ? false:true}   className={`join-item btn ${p.active ? "btn-active bg-[#0984e3] text-white  hover:bg-[#0984e3]" : ""} `}   dangerouslySetInnerHTML={{ __html: p.label }} onClick={()=> handleUrlPaginate(p.url, tabIndex === 2 ? tabsLinks[tabIndexChild].text : tabs[tabIndex].text)}></button>
                         )
                   })}
 
@@ -860,6 +903,9 @@ const getEmployeeDetails = () => {
     handleSubmitPayload={handleSubmitPayload}
     data={leaveData}
     load={load}
+    error={error}
+    setError={setError}
+    buttonLoad={buttonLoad}
     />
     </>
   )

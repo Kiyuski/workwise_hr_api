@@ -13,13 +13,24 @@ use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\NotificationController;
-
+use App\Http\Controllers\SentEmailController;
+use App\Http\Controllers\PasswordController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\WelcomeEmailController;
+use App\Events\TestEvent;
 
 Route::middleware('auth:sanctum')->group(function () {
  
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::get('/verify-email', [SentEmailController::class, 'sendEmail']);
+
+
+
+
+    
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('position', PositionController::class);
     Route::apiResource('department', DepartmentController::class);
@@ -41,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
 
 
+
+
     Route::get('/attendance/employee/{id}', [AttendanceController::class, 'allEmployeeAttendance']);
 
 
@@ -51,9 +64,26 @@ Route::middleware('auth:sanctum')->group(function () {
         'update' => 'attendance.update',
         'destroy' => 'attendance.destroy',
     ]);
-    
-    
+
+    Route::post('/change-password', [PasswordController::class, 'changePassword']);
+  
+    Route::put('/users/{id}/email', [AuthController::class, 'updateEmail']);
+
+
 });
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/send-password-reset-email', [SentEmailController::class, 'sendPasswordResetEmail']);
+Route::post('/send-welcome-email', [WelcomeEmailController::class, 'sendWelcomeEmail']);
+
+Route::post('/testSend', function (Request $request) {
+
+    event(new TestEvent($request->all()));
+    
+    return response()->json([
+        'message' => 'Send BroadCast Dispatch!'
+    ], 200);
+});

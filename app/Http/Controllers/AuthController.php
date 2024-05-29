@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use App\Models\Employee;
 
 
 
@@ -45,6 +47,7 @@ class AuthController extends Controller
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'provider' => $data['provider'],
+                'verification_hash' => Str::random(40), 
             ]);
         }
       
@@ -77,11 +80,30 @@ class AuthController extends Controller
             'user' => auth()->user(),
             'token' => $token,
         ], 201);
+    }
 
+    public function updateEmail(Request $request, $id) {
+        // Validate the incoming request data
+        $request->validate([
+            'email' => 'required|email|unique:users,email,'.$id,
+            'employee_id' => 'required|exists:employees,id',
+        ]);
 
-      
+        // Find the user
+        $user = User::findOrFail($id);
+        $employee = Employee::findOrFail($request->employee_id);
 
-    
+        // Update the email
+        $user->email = $request->email;
+        $user->email_verified_at = null;
+        $user->save();
+
+        $employee->employee_email = $request->email;
+        $employee->save();
+
+        return response()->json([
+            'message' => 'Email updated successfully.',
+        ], 201);
     }
 
 }

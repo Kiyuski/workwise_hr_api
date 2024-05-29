@@ -10,32 +10,40 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NewRecordInserted
+class NotificationUpdateLeave implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
     /**
      * Create a new event instance.
      */
 
-    public $newRecord;
+    public $data;
+ 
 
     public function __construct($data)
     {
         //
-        $this->newRecord = $newRecord;
-        
+        $this->data = $data;
     }
 
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return \Illuminate\Broadcasting\Channel|array
      */
-    public function broadcastOn(): array
+    public function broadcastOn()
     {
-        return [
-            new PrivateChannel('testing'),
-        ];
+        return new Channel('workwise_channel');
+    }
+
+    /**
+     * Get the name of the broadcast event.
+     *
+     * @return string
+     */
+    public function broadcastAs(): string
+    {
+        return 'workwise_event';
     }
 }

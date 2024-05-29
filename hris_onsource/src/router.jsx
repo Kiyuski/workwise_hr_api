@@ -13,11 +13,8 @@ import Reports from "./views/Reports";
 import AddExcel from "./views/AddExcel";
 import ShowUser from "./views/ShowUser";
 import UserDetails from "./views/UserDetails";
-import Attendance from "./views/Attendance";
 import Leave from "./views/Leave";
-import Addnewattendance from "./views/Add-new-attendance";
 import Mainhero from "./views/Mainhero";
-import UpdateAttendance from "./views/Update-attendance";
 import PartNumberToArray from "./views/PartNumberToArray";
 import Notifications from "./views/Notifications";
 
@@ -42,11 +39,8 @@ const router = createBrowserRouter([
           { path: "/employees", element: <Employees />},
           { path: "/employees/add-excel", element: <AddExcel />},
           { path: "/history", element: <History />},
-          { path: "/attendance", element: <Attendance />},
           { path: "/leave", element: <Leave />},
           { path: "/reports", element: <Reports />},
-          { path: "/attendance/addNewAttendance", element: <Addnewattendance />},
-          { path: "/attendance/updateNewAttendance/:id", element: <UpdateAttendance />},
           { path: "/employees/:id/update", element: <ShowUser />},
           { path: "/employees/:id", element: <UserDetails />},
           { path: "/notification", element: <Notifications />},

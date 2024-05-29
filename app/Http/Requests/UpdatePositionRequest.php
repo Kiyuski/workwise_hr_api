@@ -23,7 +23,7 @@ class UpdatePositionRequest extends FormRequest
     {
         return [
             //
-            'position' => 'string|unique:positions,position'
+            'position' => 'string'
         ];
     }
 }

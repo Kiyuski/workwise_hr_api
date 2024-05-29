@@ -8,6 +8,9 @@ use App\Models\Notification;
 use App\Http\Requests\StoreLeaveRequest;
 use App\Http\Requests\UpdateLeaveRequest;
 use Illuminate\Http\Request;
+use App\Mail\LeaveEmailSentStatus;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
@@ -29,7 +32,7 @@ class LeaveController extends Controller
                     'de.department',
                     'p.position',
                     'l.id as leave_id',
-                    'em.employee_image',
+                    'm.employee_image',
                     'lt.leave_type',
                     'l.leave_status_date_time',
                     DB::raw("CONCAT(de.department, '-', m.employee_name, ' (', m.employee_role, ')') as approval_head"),
@@ -136,7 +139,7 @@ class LeaveController extends Controller
                                 ->orWhere('emp.employee_name', 'like', '%' . $searchKeyword . '%');
                 })->where("l.employee_approval_id", "=", $request->employee_id)
                 ->orderBy("created_at", "DESC")
-                ->paginate(2)
+                ->paginate(10)
                 ->appends(['search' => $searchKeyword]);
             break;
             case 'all_pending_leave':
@@ -259,13 +262,48 @@ class LeaveController extends Controller
             ], 404);
         }
 
-       
+ 
         $leave->update($data);
+
+      
+        if ($leave->leave_status == "APPROVED") {
+            $res = Leave::query()
+                ->select(
+                    'lt.leave_type as leave_type',
+                    'm.employee_name as owner_name',
+                    'm.employee_email as owner_email',
+                    'em.employee_name as person_to_approved_name',
+                    'em.employee_role as person_to_approved_role',
+                    'p.position as person_to_approved_position',
+                    'l.leave_apply_date',
+                    'l.leave_start_date',
+                    'l.leave_end_date',
+                    'l.leave_status'
+                )
+                ->from('leaves as l')
+                ->leftJoin('leave_types as lt', 'l.leave_type_id', '=', 'lt.id')
+                ->leftJoin('employees as m', 'l.employee_id', '=', 'm.id')
+                ->leftJoin('employees as em', 'l.employee_approval_id', '=', 'em.id')
+                ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
+                ->where("l.id", "=", $leave->id)
+                ->first(); 
+            
+                $res->leave_start_date = Carbon::parse($res->leave_start_date)->format('F d, Y');
+                $res->leave_end_date = Carbon::parse($res->leave_end_date)->format('F d, Y');
+
+             Mail::to($res->owner_email)->send(new LeaveEmailSentStatus($res));
+        }
 
         return response()->json([
             'message' => 'Leave is updated successfully',
             'data' => $leave,
         ], 200);
+        
+
+        
+        
+
+        
     }
 
     /**
