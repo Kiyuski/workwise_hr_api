@@ -85,7 +85,7 @@ export const ComponentDataList = ({ind, chilIn, data, moment, showReusableData, 
             <td className=" whitespace-nowrap ">
              <span className="font-semibold uppercase">{l.leave_type}</span>
               <br/>
-              <span className="badge badge-ghost badge-sm opacity-70">Apply on {moment(l.leave_apply_date).format("LL")}</span>
+              <span className="badge badge-ghost badge-sm opacity-70">Apply on {moment(l.leave_apply_date).format("LL")}.</span>
             </td>
             <td className=" whitespace-nowrap ">{moment(l.leave_start_date).format("LL")}</td>
             <td className=" whitespace-nowrap ">{moment(l.leave_end_date).format("LL")}</td>
