@@ -8,8 +8,8 @@
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.8",
         "haruncpi/laravel-id-generator": "^1.1",
-        "laravel/framework": "^11.0",
         "laravel/reverb": "@beta",
+        "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "pusher/pusher-php-server": "*"
