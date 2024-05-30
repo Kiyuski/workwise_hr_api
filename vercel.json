@@ -5,7 +5,6 @@
     "functions": {
         "api/index.php": { "runtime": "vercel-php@0.6.0" }
     },
-    "outputDirectory": "public",
     "routes": [
         {
             "src": "/(.*)",
