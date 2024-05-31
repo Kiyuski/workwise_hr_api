@@ -52,8 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
 
 
-
-
     Route::get('/attendance/employee/{id}', [AttendanceController::class, 'allEmployeeAttendance']);
 
 
@@ -79,11 +77,4 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/send-password-reset-email', [SentEmailController::class, 'sendPasswordResetEmail']);
 Route::post('/send-welcome-email', [WelcomeEmailController::class, 'sendWelcomeEmail']);
 
-Route::post('/testSend', function (Request $request) {
 
-    event(new TestEvent($request->all()));
-    
-    return response()->json([
-        'message' => 'Send BroadCast Dispatch!'
-    ], 200);
-});

@@ -18,6 +18,7 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {  
       
+        
         $id = $request->input('data');
         $searchKeyword = $request->input('search');
 
@@ -111,6 +112,7 @@ class DepartmentController extends Controller
             'data' =>  $queryData,
             'for_filter_button' => $forFilterButton
         ], 200);
+        
         
      
     }
