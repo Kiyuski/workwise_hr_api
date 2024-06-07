@@ -24,7 +24,6 @@ class StoreLeave_typeRequest extends FormRequest
         return [
             //
             'leave_type' =>'required|string|unique:leave_types,leave_type',
-            'leave_number_of_days' =>'required|numeric',
             'leave_status' => 'required|string'
         ];
     }

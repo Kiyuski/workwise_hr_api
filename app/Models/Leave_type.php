@@ -11,7 +11,6 @@ class Leave_type extends Model
 
     protected $fillable = [
         'leave_type',
-        'leave_number_of_days',
         'leave_status',
     ];
 

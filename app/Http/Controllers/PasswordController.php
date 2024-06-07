@@ -61,7 +61,7 @@ class PasswordController extends Controller
         // Check if the password was successfully reset
         if ($status === Password::PASSWORD_RESET) {
             // Password was reset successfully
-            $homepageUrl = 'http://192.168.1.32:3000/';
+            $homepageUrl = 'https://workwise-hr-front-end.vercel.app/';
 
             return view('password_reset_success', compact('homepageUrl'));
         } else {

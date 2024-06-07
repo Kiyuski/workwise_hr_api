@@ -49,7 +49,6 @@
             <p>I hope this email finds you well. I am writing to inform you that your leave application has been approved.</p>
             <p>Your leave for {{$data->leave_type}} has been confirmed from {{ $data->leave_start_date }} to {{ $data->leave_end_date }}, as per your request. During your absence, please ensure that all necessary arrangements are made to hand over your responsibilities to your designated colleague or team member.</p>
             <p>If you have any questions or concerns regarding your leave, feel free to reach out to me or the HR department for assistance.</p>
-            <p>Wishing you a rejuvenating and enjoyable time off.</p>
         </div>
         
         <div class="footer">
