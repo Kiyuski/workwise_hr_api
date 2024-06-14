@@ -40,7 +40,7 @@ class SentEmailController extends Controller
             $user->email_verified_at = now();
             $user->save();
 
-            $homepageUrl = 'http://192.168.1.32:3000/';
+            $homepageUrl = 'https://workwise-hr-front-end.vercel.app/';
 
             return view('verify', compact('homepageUrl'));
         } else {

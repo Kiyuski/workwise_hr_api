@@ -37,9 +37,6 @@ class EmployeeController extends Controller
         ->orderBy("employees.created_at", 'desc');
     
 
-    
-
-
         if ($request->has('all')) {
             return EmployeeResource::collection($results->get());
         }
