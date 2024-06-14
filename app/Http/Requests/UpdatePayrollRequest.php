@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCompensationRequest extends FormRequest
+class UpdatePayrollRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -42,7 +42,8 @@ class StoreCompensationRequest extends FormRequest
             'comp_allowance' => 'nullable|numeric',
             'comp_account_num' => 'nullable|string',
             'comp_acount_name' => 'nullable|string',
-            'comp_pay_roll_dates' => 'required|date',
+            'comp_pay_roll_dates' => 'date',
         ];
+
     }
 }

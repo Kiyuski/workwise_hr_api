@@ -15,8 +15,10 @@ class CompensationController extends Controller
     public function index()
     {
         //
-        $results = Compensation::select("compensation.*", "p.position", "de.department", "em.*", "compensation.id as compe_id", "em.id as emp_id")
-        ->leftJoin('employees as em', 'compensation.employee_id', '=', 'em.id')
+
+        return Compensation::all();
+        $results = Compensation::select("compensations.*", "p.position", "de.department", "em.*", "compensations.id as compe_id", "em.id as emp_id")
+        ->leftJoin('employees as em', 'compensations.employee_id', '=', 'em.id')
         ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
         ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
         ->orderBy("compensation.created_at", 'desc')
@@ -25,6 +27,8 @@ class CompensationController extends Controller
         foreach ($results as $dt) {
             $dt->employee_image = $dt->employee_image ? \URL::to($dt->employee_image) : null;
         };
+
+        
     
          return response()->json($results, 200);
 

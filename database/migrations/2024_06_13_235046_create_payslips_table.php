@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
         Schema::create('payslips', function (Blueprint $table) {
-
             $table->id();
+            $table->unsignedBigInteger('payroll_id')->nullable();
+            $table->foreign('payroll_id')->references('id')->on('payrolls');
 
-            $table->string('employee_id');
-            $table->foreign('employee_id')->references('id')->on('employees');
-            $table->foreign('compensation_id')->references('id')->on('compensations');
             $table->float('earnings_per_month', 10, 2)->nullable();
             $table->float('earnings_allowance', 10, 2)->nullable();
             $table->float('earnings_night_diff', 10, 2)->nullable();
@@ -45,6 +42,7 @@ return new class extends Migration
             $table->date('pay_period_end')->nullable();
 
             $table->timestamps();
+
         });
     }
 
@@ -53,8 +51,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
-        
         Schema::dropIfExists('payslips');
     }
 };

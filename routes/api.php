@@ -13,12 +13,13 @@ use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\NotificationController;
-// use App\Http\Controllers\SentEmailController;
+use App\Http\Controllers\SentEmailController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PayslipController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\WelcomeEmailController;
 use App\Http\Controllers\CompensationController;
+use App\Http\Controllers\PayrollController;
 
 Route::middleware('auth:sanctum')->group(function () {
  
@@ -26,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // Route::get('/verify-email', [SentEmailController::class, 'sendEmail']);
+
     
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('position', PositionController::class);
@@ -36,10 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('leave_type', LeaveTypeController::class);
     Route::apiResource('notification', NotificationController::class);
     Route::apiResource('payslip', PayslipController::class);
-    Route::apiResource('compensation', CompensationController::class);
+    Route::apiResource('compensation', PayrollController::class);
 
 
     Route::get('/leave/employee/{id}', [LeaveController::class, 'allEmployeeLeave']);
+    Route::get('/verify-email', [SentEmailController::class, 'sendEmail']);
     
     Route::apiResource('leave', LeaveController::class)->names([
         'index' => 'leave.index',

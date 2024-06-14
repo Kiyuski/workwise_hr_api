@@ -22,6 +22,8 @@ class StorePayslipRequest extends FormRequest
     public function rules(): array
     {
         return [
+         
+            'payroll_id' => 'numeric',
             'earnings_per_month' => 'nullable|numeric',
             'earnings_allowance' => 'nullable|numeric',
             'earnings_night_diff' => 'nullable|numeric',
@@ -43,7 +45,9 @@ class StorePayslipRequest extends FormRequest
             'payslip_netPay' => 'nullable|numeric',
             'pay_period_begin' => 'required|date',
             'pay_period_end' => 'required|date|after:pay_period_begin',
-            'employee_id' => 'required'
+            
+           
         ];
+
     }
 }
