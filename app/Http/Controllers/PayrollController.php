@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePayrollRequest;
 use App\Http\Requests\UpdatePayrollRequest;
 
+
 class PayrollController extends Controller
 {
     /**
@@ -16,8 +17,22 @@ class PayrollController extends Controller
     {
         //
         
-        $results = Payroll::select("payrolls.*", "p.position", "de.department", "em.*", "payrolls.id as compe_id", "em.id as emp_id", "ps.id as payslip_id")
+        $results = Payroll::select(
+        "payrolls.*", 
+        "p.position", 
+        "de.department", 
+        "em.employee_name",
+        "em.employee_id", 
+        "em.employee_image",
+        "em.employee_email",
+        "em.employee_role",
+        "payrolls.id as compe_id", 
+        "em.id as emp_id",
+        "ps.id as payslip_id", 
+        "rs.rates_account_num", 
+        "rs.rates_acount_name")
         ->leftJoin('employees as em', 'payrolls.employee_id', '=', 'em.id')
+        ->leftJoin('rates as rs', 'em.id', '=', 'rs.employee_id')
         ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
         ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
         ->leftJoin('payslips as ps', 'payrolls.id', '=', 'ps.payroll_id')
@@ -57,10 +72,24 @@ class PayrollController extends Controller
     {
         //
 
-        $result = Payroll::select("payrolls.*", "p.position", "de.department", "em.*", "payrolls.id as compe_id", "em.id as emp_id")
+        $result = Payroll::select(
+        "payrolls.*", 
+        "p.position", 
+        "de.department", 
+        "em.employee_name",
+        "em.employee_id", 
+        "em.employee_email",
+        "em.employee_role",
+        "payrolls.id as compe_id", 
+        "em.id as emp_id",
+        "ps.id as payslip_id", 
+        "rs.rates_account_num", 
+        "rs.rates_acount_name")
         ->leftJoin('employees as em', 'payrolls.employee_id', '=', 'em.id')
+        ->leftJoin('rates as rs', 'em.id', '=', 'rs.employee_id')
         ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
         ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
+        ->leftJoin('payslips as ps', 'payrolls.id', '=', 'ps.payroll_id')
         ->where("payrolls.id", $id)
         ->first();
     
@@ -85,7 +114,6 @@ class PayrollController extends Controller
     {
         //
         $data = $request->validated();
-
         $payroll = Payroll::find($id);
         
 
@@ -96,10 +124,11 @@ class PayrollController extends Controller
         }
 
         $payroll->update($data);
+        
 
         return response()->json([
-            'message' => 'Payroll updated successfully',
-            'position' => $payroll,
+            'message' => 'Payroll is updated successfully',
+            'payroll' => $payroll,
         ], 200);
     }
 
