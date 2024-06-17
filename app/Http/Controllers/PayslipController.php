@@ -6,7 +6,7 @@ use App\Models\Payslip;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePayslipRequest;
 use App\Http\Requests\UpdatePayslipRequest;
-
+use Illuminate\Support\Facades\DB;
 class PayslipController extends Controller
 {
     /**
@@ -15,6 +15,37 @@ class PayslipController extends Controller
     public function index()
     {
         //
+        $results = Payslip::select(
+        "payslips.*", 
+        "p.position", 
+        "de.department", 
+        "em.employee_name",
+        "em.employee_id", 
+        "em.employee_image",
+        "em.employee_email",
+        "em.employee_role",
+        "em.id as emp_id",
+        'pr.id as compe_id',
+        "rs.rates_account_num", 
+        "rs.rates_acount_name"
+        )
+        ->leftJoin('payrolls as pr', 'pr.id', '=', 'payslips.payroll_id')
+        ->leftJoin('employees as em', 'pr.employee_id', '=', 'em.id')
+        ->leftJoin('rates as rs', 'em.id', '=', 'rs.employee_id')
+        ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
+        ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
+        ->orderBy("payslips.created_at", 'desc')
+        ->get();
+
+        foreach ($results as $dt) {
+            $dt->employee_image = $dt->employee_image ? \URL::to($dt->employee_image) : null;
+        };
+
+        
+    
+        return response()->json($results, 200);
+
+
     }
 
     /**
@@ -56,9 +87,6 @@ class PayslipController extends Controller
     {
         //
         $data = $request->validated();
-
-   
-        
         $payslip = Payslip::find($id);
         
 
@@ -67,9 +95,44 @@ class PayslipController extends Controller
                 'message' => 'Payslip not found',
             ], 404);
         }
+      
+        DB::table('payslips as ps')
+        ->join('payrolls as pr', 'pr.id', '=', 'ps.payroll_id')
+        ->where('ps.id', $id)
+        ->update([
+            'pr.comp_per_hour_day' => $data['earnings_per_day_hour'],
+            'pr.comp_bi_monthly' => $data['earnings_per_month'],
+            'pr.comp_allowance' => $data['earnings_allowance'],
+            'pr.comp_night_diff' => $data['earnings_night_diff'],
+            'pr.comp_holiday_or_ot' => $data['earnings_holiday'],
+            'pr.comp_retro' => $data['earnings_retro'],
+            'pr.comp_comission' => $data['earnings_commission'],
+            'pr.comp_withholding' => $data['deductions_holding_tax'],
+            'pr.comp_sss' => $data['deductions_sss_contribution'],
+            'pr.comp_phic' => $data['deductions_phic_contribution'],
+            'pr.comp_sss_loan' => $data['deductions_sss_loan'],
+            'pr.comp_hdmf' => $data['deductions_hdmf_contribution'],
+            'ps.earnings_per_month' => $data['earnings_per_month'],
+            'ps.earnings_allowance' => $data['earnings_allowance'],
+            'ps.earnings_night_diff' => $data['earnings_night_diff'],
+            'ps.earnings_holiday' => $data['earnings_holiday'],
+            'ps.earnings_retro' => $data['earnings_retro'],
+            'ps.earnings_commission' => $data['earnings_commission'],
+            'ps.deductions_hmo' => $data['deductions_hmo'],
+            'ps.deductions_hmo_loan' => $data['deductions_hmo_loan'],
+            'ps.deductions_others' => $data['deductions_others'],
+            'ps.deductions_employee_loan' => $data['deductions_employee_loan'],
+            'ps.deductions_holding_tax' => $data['deductions_holding_tax'],
+            'ps.deductions_sss_contribution' => $data['deductions_sss_contribution'],
+            'ps.deductions_phic_contribution' =>$data['deductions_phic_contribution'],
+            'ps.deductions_sss_loan' => $data['deductions_sss_loan'],
+            'ps.deductions_lwop' => $data['deductions_lwop'],
+            'ps.pay_period_begin' => $data['pay_period_begin'],
+            'pay_period_end' => $data['pay_period_end'],
+            'ps.deductions_hdmf_contribution' => $data['deductions_hdmf_contribution']
+        ]);
 
-        $payslip->update($data);
-
+   
         return response()->json([
             'message' => 'Payslip updated successfully',
             'position' => $payslip,

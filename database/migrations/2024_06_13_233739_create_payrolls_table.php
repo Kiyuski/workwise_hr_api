@@ -23,7 +23,6 @@ return new class extends Migration
             $table->float('comp_holiday_or_ot', 10, 2)->nullable();
             $table->float('comp_comission', 10, 2)->nullable();
             $table->float('comp_number_of_mins', 10, 2)->nullable();
-
             $table->float('comp_number_of_days', 10, 2)->nullable();
             $table->float('comp_mins', 10, 2)->nullable();
             $table->float('comp_days', 10, 2)->nullable();
@@ -34,12 +33,10 @@ return new class extends Migration
             $table->float('comp_sss_loan', 10, 2)->nullable();
             $table->float('comp_ar', 10, 2)->nullable();
             $table->float('comp_retro', 10, 2)->nullable();
-
             $table->float('comp_allowance', 10, 2)->nullable();
-            $table->string('comp_account_num')->nullable();
-            $table->string('comp_acount_name')->nullable();
-
             $table->date('comp_pay_roll_dates')->nullable();
+            $table->date('comp_pay_roll_dates_begin')->nullable();
+            $table->date('comp_pay_roll_dates_end')->nullable();
 
             $table->timestamps();
         });

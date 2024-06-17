@@ -31,5 +31,7 @@ class Payroll extends Model
         'comp_account_num',
         'comp_acount_name',
         'comp_pay_roll_dates',
+        'comp_pay_roll_dates_begin',
+        'comp_pay_roll_dates_end',
     ];
 }

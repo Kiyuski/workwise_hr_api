@@ -42,7 +42,9 @@ class StorePayrollRequest extends FormRequest
             'comp_allowance' => 'nullable|numeric',
             'comp_account_num' => 'nullable|string',
             'comp_acount_name' => 'nullable|string',
-            'comp_pay_roll_dates' => 'required|date',
+            'comp_pay_roll_dates' => 'date|required',
+            'comp_pay_roll_dates_begin' => 'date|required',
+            'comp_pay_roll_dates_end' => 'date|required|after:comp_pay_roll_dates_begin'
         ];
 
     }
