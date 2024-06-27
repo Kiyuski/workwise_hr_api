@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePayslipRequest;
 use App\Http\Requests\UpdatePayslipRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
 class PayslipController extends Controller
 {
     /**
@@ -54,9 +56,64 @@ class PayslipController extends Controller
     public function store(StorePayslipRequest $request)
     {
         //
-        
-        $datas = $request->validated();
-        Payslip::create($datas);
+
+      
+
+                // // Validation rules
+                // $rules = [
+                //     'payslipData.*.payroll_id' => 'unique:employees,employee_id',
+                // ];
+            
+                // // Validation messages
+                // $messages = [
+                //     '_employeeData.*.employee_id.unique' => 'employee id has already been taken',
+                //     '_employeeData.*.employee_id.required' => 'employee id is required',
+                //     '_employeeData.*.department_id.required' => 'department field is required',
+                //     '_employeeData.*.position_id.required' => 'position field is required',
+                // ];
+            
+                // // Validate the request data
+                // $validator = Validator::make($datas, $rules, $messages);
+            
+                // // Check if validation fails
+                // if ($validator->fails()) {
+                //     return response()->json(['errors' => $validator->errors()], 422);
+                // }
+    
+            
+            foreach ($request->payslipData as $data) {
+                Payslip::create([
+                    "payroll_id" => $data["payroll_id"],
+                    'earnings_per_month' => $data['earnings_per_month'],
+                    'earnings_allowance' => $data['earnings_allowance'],
+                    'earnings_night_diff' => $data['earnings_night_diff'],
+                    'earnings_holiday' => $data['earnings_holiday'],
+                    'earnings_retro' => $data['earnings_retro'],
+                    'earnings_commission' => $data['earnings_commission'],
+                    'deductions_lwop' => $data['deductions_lwop'],
+                    'deductions_holding_tax' => $data['deductions_holding_tax'],
+                    'deductions_sss_contribution' => $data['deductions_sss_contribution'],
+                    'deductions_phic_contribution' => $data['deductions_phic_contribution'],
+                    "deductions_hdmf_contribution" => $data["deductions_hdmf_contribution"],
+                    'deductions_hmo' => $data['deductions_hmo'],
+                    'deductions_sss_loan' => $data['deductions_sss_loan'],
+                    'deductions_hmo_loan' => $data['deductions_hmo_loan'],
+                    'deductions_employee_loan' => $data['deductions_employee_loan'],
+                    'deductions_others' => $data['deductions_others'],
+                    'earnings_total' => $data['earnings_total'],
+                    'deductions_total' => $data['deductions_total'],
+                    'payslip_netPay' => $data['payslip_netPay'],
+                    'pay_period_begin' => $data['pay_period_begin'],
+                    'pay_period_end' => $data['pay_period_end']
+                ]);
+    
+    
+            }
+
+      
+
+    
+ 
         return response()->json([
         'message' => 'Payslip for employee is created successfully!',
         ], 200);
@@ -135,7 +192,6 @@ class PayslipController extends Controller
    
         return response()->json([
             'message' => 'Payslip updated successfully',
-            'position' => $payslip,
         ], 200);
     }
 

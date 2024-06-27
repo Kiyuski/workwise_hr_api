@@ -6,6 +6,7 @@ use App\Models\Payroll;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePayrollRequest;
 use App\Http\Requests\UpdatePayrollRequest;
+use Illuminate\Support\Facades\DB;
 
 
 class PayrollController extends Controller
@@ -28,7 +29,7 @@ class PayrollController extends Controller
         "em.employee_role",
         "payrolls.id as compe_id", 
         "em.id as emp_id",
-        "ps.id as payslip_id", 
+        "ps.id as payslip_id",
         "rs.rates_account_num", 
         "rs.rates_acount_name")
         ->leftJoin('employees as em', 'payrolls.employee_id', '=', 'em.id')
@@ -123,13 +124,56 @@ class PayrollController extends Controller
             ], 404);
         }
 
-        $payroll->update($data);
-        
+        switch ($data['action']) {
+            case 'update_existing_payroll':
+                try {
+                DB::table('rates as rt')
+                ->join('employees as em', 'rt.employee_id', '=', 'em.id')
+                ->join('payrolls as pr', 'pr.employee_id', '=', 'em.id')
+                ->where('rt.id', $data['rates_id'])
+                ->where('pr.id', $id)
+                ->update([
+                    'pr.comp_per_hour_day' => $data['comp_per_hour_day'],
+                    'pr.comp_bi_monthly' => $data['comp_bi_monthly'],
+                    'pr.comp_allowance' => $data['comp_allowance'],
+                    'pr.comp_night_diff' => $data['comp_night_diff'],
+                    'pr.comp_holiday_or_ot' => $data['comp_holiday_or_ot'],
 
-        return response()->json([
-            'message' => 'Payroll is updated successfully',
-            'payroll' => $payroll,
-        ], 200);
+                    'pr.comp_ar' => $data['comp_ar'],
+                    'pr.comp_other_deduction' => $data['comp_other_deduction'],
+                    'pr.comp_loans_deduction' => $data['comp_loans_deduction'],
+                    'pr.comp_retro' => $data['comp_retro'],
+                    'pr.comp_others_additional' => $data['comp_others_additional'],
+
+                    'pr.comp_comission' => $data['comp_comission'],
+                    'pr.comp_withholding' => $data['comp_withholding'],
+                    'pr.comp_sss' => $data['comp_sss'],
+                    'pr.comp_phic' => $data['comp_phic'],
+                    'pr.comp_sss_loan' => $data['comp_sss_loan'],
+                    'pr.comp_hdmf_loan' => $data['comp_hdmf_loan'],
+                    'pr.comp_hdmf_mp' => $data['comp_hdmf_mp'],
+                    'rt.rates_night_diff' => $data['comp_night_diff'] * 2,
+                    'rt.rates_allowance' => $data['comp_allowance'] * 2,
+                    'rt.rates_basic_salary' => $data['comp_bi_monthly'] * 2,
+                ]);
+
+                    return response()->json([
+                        'message' => 'Payroll is updated successfully',
+                    ], 200);
+
+                } catch (\Throwable $e) {
+                    return response()->json([
+                        'error' => 'Failed to update payroll: ' . $e->getMessage(),
+                    ], 500);
+                }
+
+            break;
+            default:
+                return null;
+            break;
+        }
+
+   
     }
 
     /**

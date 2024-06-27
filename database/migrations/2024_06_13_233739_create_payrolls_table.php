@@ -31,8 +31,15 @@ return new class extends Migration
             $table->float('comp_hdmf', 10, 2)->nullable();
             $table->float('comp_withholding', 10, 2)->nullable();
             $table->float('comp_sss_loan', 10, 2)->nullable();
+            $table->float('comp_hdmf_loan', 10, 2)->nullable();
+            $table->float('comp_hdmf_mp', 10, 2)->nullable();
+
             $table->float('comp_ar', 10, 2)->nullable();
+            $table->float('comp_other_deduction', 10, 2)->nullable();
+            $table->float('comp_loans_deduction', 10, 2)->nullable();
             $table->float('comp_retro', 10, 2)->nullable();
+            $table->float('comp_others_additional', 10, 2)->nullable();
+
             $table->float('comp_allowance', 10, 2)->nullable();
             $table->date('comp_pay_roll_dates')->nullable();
             $table->date('comp_pay_roll_dates_begin')->nullable();

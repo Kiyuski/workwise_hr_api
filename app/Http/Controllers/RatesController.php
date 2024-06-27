@@ -15,8 +15,52 @@ class RatesController extends Controller
     public function index()
     {
         //
-        $results = Rates::select("rates.*", "p.position", "de.department", "em.*", "rates.id as compe_id", "em.id as emp_id")
+        $results = Rates::select(
+        "rates.*", 
+        "p.position", 
+        "de.department", 
+        "rates.id as compe_id", 
+        "em.id as emp_id",
+        'em.employee_name',
+        'em.employee_id',
+        'em.employee_image',
+        'em.employee_email',
+        'em.employee_role',
+        "pr.id as payroll_id",
+        'pr.comp_bi_monthly',
+        'pr.comp_per_hour_day',
+        'pr.comp_night_diff',
+        'pr.comp_holiday_or_ot',
+        'pr.comp_comission',
+        'pr.comp_number_of_mins',
+        'pr.comp_number_of_days',
+        'pr.comp_mins',
+        'pr.comp_days',
+        'pr.comp_sss',
+        'pr.comp_phic',
+        'pr.comp_hdmf',
+        'pr.comp_withholding',
+        'pr.comp_sss_loan',
+        'pr.comp_hdmf_loan',
+        'pr.comp_hdmf_mp',
+        'comp_ar',
+        'comp_other_deduction',
+        'comp_loans_deduction',
+        'comp_retro',
+        'comp_others_additional',
+        'pr.comp_allowance',
+        'pr.comp_pay_roll_dates',
+
+        "ps.id as payslip_id",
+        "ps.pay_period_begin",
+        "ps.pay_period_end",
+        
+        'pr.comp_pay_roll_dates_begin',
+        'pr.comp_pay_roll_dates_end'
+        )
         ->leftJoin('employees as em', 'rates.employee_id', '=', 'em.id')
+        ->leftJoin('payrolls as pr', 'em.id' ,'=', 'pr.employee_id')
+        ->leftJoin('payslips as ps', 'pr.id', '=', 'ps.payroll_id')
         ->leftJoin('positions as p', 'em.position_id', '=', 'p.id')
         ->leftJoin('departments as de', 'em.department_id', '=', 'de.id')
         ->get();
