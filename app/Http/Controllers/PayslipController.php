@@ -17,6 +17,9 @@ class PayslipController extends Controller
     public function index()
     {
         //
+
+     
+        
         $results = Payslip::select(
         "payslips.*", 
         "p.position", 
