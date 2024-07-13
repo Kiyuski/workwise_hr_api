@@ -139,19 +139,23 @@ class PayrollController extends Controller
                     'pr.comp_night_diff' => $data['comp_night_diff'],
                     'pr.comp_holiday_or_ot' => $data['comp_holiday_or_ot'],
 
-                    'pr.comp_ar' => $data['comp_ar'],
-                    'pr.comp_other_deduction' => $data['comp_other_deduction'],
-                    'pr.comp_loans_deduction' => $data['comp_loans_deduction'],
-                    'pr.comp_retro' => $data['comp_retro'],
-                    'pr.comp_others_additional' => $data['comp_others_additional'],
-
+                    'pr.comp_ar_others' => $data['comp_ar_others'],
+                    'pr.comp_retro_others' => $data['comp_retro_others'],
+            
                     'pr.comp_comission' => $data['comp_comission'],
                     'pr.comp_withholding' => $data['comp_withholding'],
                     'pr.comp_sss' => $data['comp_sss'],
                     'pr.comp_phic' => $data['comp_phic'],
                     'pr.comp_sss_loan' => $data['comp_sss_loan'],
                     'pr.comp_hdmf_loan' => $data['comp_hdmf_loan'],
-                    'pr.comp_hdmf_mp' => $data['comp_hdmf_mp'],
+                    'pr.comp_hdmf' => $data['comp_hdmf'],
+                    
+                    'pr.comp_number_of_mins' => $data['comp_number_of_mins'],
+                    'pr.comp_number_of_days' => $data['comp_number_of_days'],
+            
+                    'pr.comp_hdmf' => $data['comp_hdmf'],
+                    'pr.comp_hdmf' => $data['comp_hdmf'],
+                
                     'rt.rates_night_diff' => $data['comp_night_diff'] * 2,
                     'rt.rates_allowance' => $data['comp_allowance'] * 2,
                     'rt.rates_basic_salary' => $data['comp_bi_monthly'] * 2,

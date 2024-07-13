@@ -38,14 +38,10 @@ class StorePayrollRequest extends FormRequest
             'comp_withholding' => 'nullable|numeric',
             'comp_sss_loan' => 'nullable|numeric',
             'comp_hdmf_loan' => 'nullable|numeric',
-            'comp_hdmf_mp' => 'nullable|numeric',
 
-            'comp_ar' => 'nullable|numeric',
-            'comp_other_deduction' => 'nullable|numeric',
-            'comp_loans_deduction' => 'nullable|numeric',
-            'comp_retro' => 'nullable|numeric',
-            'comp_others_additional' => 'nullable|numeric',
-            
+            'comp_ar_others' => 'nullable|numeric',
+            'comp_retro_others' => 'nullable|numeric',
+          
             'comp_allowance' => 'nullable|numeric',
             'comp_account_num' => 'nullable|string',
             'comp_acount_name' => 'nullable|string',

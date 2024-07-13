@@ -47,12 +47,8 @@ class RatesController extends Controller
             'pr.comp_withholding',
             'pr.comp_sss_loan',
             'pr.comp_hdmf_loan',
-            'pr.comp_hdmf_mp',
-            'pr.comp_ar',
-            'pr.comp_other_deduction',
-            'pr.comp_loans_deduction',
-            'pr.comp_retro',
-            'pr.comp_others_additional',
+            'pr.comp_ar_others',
+            'pr.comp_retro_others',
             'pr.comp_allowance',
             'pr.comp_pay_roll_dates',
             'ps.id AS payslip_id',
@@ -101,12 +97,8 @@ class RatesController extends Controller
         'pr.comp_withholding',
         'pr.comp_sss_loan',
         'pr.comp_hdmf_loan',
-        'pr.comp_hdmf_mp',
-        'pr.comp_ar',
-        'pr.comp_other_deduction',
-        'pr.comp_loans_deduction',
-        'pr.comp_retro',
-        'pr.comp_others_additional',
+        'pr.comp_ar_others',
+        'pr.comp_retro_others',
         'pr.comp_allowance',
         'pr.comp_pay_roll_dates',
         'ps.id as payslip_id',
@@ -149,12 +141,8 @@ class RatesController extends Controller
             pr.comp_withholding,
             pr.comp_sss_loan,
             pr.comp_hdmf_loan,
-            pr.comp_hdmf_mp,
-            pr.comp_ar,
-            pr.comp_other_deduction,
-            pr.comp_loans_deduction,
-            pr.comp_retro,
-            pr.comp_others_additional,
+            pr.comp_ar_others,
+            pr.comp_retro_others,
             pr.comp_allowance,
             pr.comp_pay_roll_dates,
             ps.id AS payslip_id,
@@ -182,6 +170,7 @@ class RatesController extends Controller
         $results = DB::table(DB::raw("({$subQuery->toSql()}) as RankedData"))
         ->mergeBindings($subQuery) // Ensure bindings are passed
         ->where('RowNum', 1) // Filter to get rows where RowNum = 1
+        ->orderBy('RankedData.payroll_id')
         ->get();
             
 
