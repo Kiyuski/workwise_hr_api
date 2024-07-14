@@ -14,6 +14,9 @@ class PayrollApprovedController extends Controller
     public function index()
     {
         //
+
+        $res = PayrollApproved::all();
+        return response()->json($res, 200);
     }
 
     /**
