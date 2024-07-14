@@ -22,6 +22,13 @@ class PayrollApprovedController extends Controller
     public function store(StorePayrollApprovedRequest $request)
     {
         //
+    
+        $datas = $request->validated();
+        PayrollApproved::create($datas);
+        return response()->json([
+        'message' => 'Payroll Approved successfully',
+        ], 200);
+
     }
 
     /**

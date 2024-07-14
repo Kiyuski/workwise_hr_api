@@ -11,7 +11,7 @@ class StorePayrollApprovedRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class StorePayrollApprovedRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'employee_id' => 'string',
+            'payroll_start_date' => 'date|required',
+            'payroll_end_date' => 'date|required',
+            'payroll_pay_date' => 'date|required',
+            'payroll_status' => 'required|string',
         ];
     }
 }
