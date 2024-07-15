@@ -38,12 +38,19 @@ class UpdatePayrollRequest extends FormRequest
             'comp_hdmf' => 'nullable',
             'comp_withholding' => 'nullable',
             'comp_sss_loan' => 'nullable',
-            'comp_ar' => 'nullable',
-            'comp_retro' => 'nullable',
+            'comp_hdmf_loan' => 'nullable|numeric',
+            'comp_hmo_loan' => 'nullable|numeric',
+
+       
+            'comp_ar_others' => 'nullable|numeric',
+            'comp_retro_others' => 'nullable|numeric',
+            
             'comp_allowance' => 'nullable',
             'comp_pay_roll_dates' => 'date',
             'comp_pay_roll_dates_begin' => 'date',
-            'comp_pay_roll_dates_end' => 'date|required|after:comp_pay_roll_dates_begin'
+            'comp_pay_roll_dates_end' => 'date|after:comp_pay_roll_dates_begin',
+            'rates_id' => 'nullable',
+            'action' => 'string'
         ];
 
     }

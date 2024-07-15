@@ -25,8 +25,12 @@ class Payroll extends Model
         'comp_hdmf',
         'comp_withholding',
         'comp_sss_loan',
-        'comp_ar',
-        'comp_retro',
+        'comp_hdmf_loan',
+        'comp_hmo_loan',
+       
+        'comp_ar_others',
+        'comp_retro_others',
+
         'comp_allowance',
         'comp_account_num',
         'comp_acount_name',

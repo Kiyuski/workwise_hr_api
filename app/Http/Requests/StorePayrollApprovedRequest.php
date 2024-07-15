@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePayslipRequest extends FormRequest
+class StorePayrollApprovedRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,11 @@ class StorePayslipRequest extends FormRequest
     public function rules(): array
     {
         return [
-           'payslipData' => 'array'  
+            'employee_id' => 'string',
+            'payroll_start_date' => 'date|required',
+            'payroll_end_date' => 'date|required',
+            'payroll_pay_date' => 'date|required',
+            'payroll_status' => 'required|string',
         ];
-
     }
 }

@@ -7,14 +7,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePayslipRequest;
 use App\Http\Requests\UpdatePayslipRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+
 class PayslipController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
+
+        return $request;
+
+    
         $results = Payslip::select(
         "payslips.*", 
         "p.position", 
@@ -53,10 +60,44 @@ class PayslipController extends Controller
      */
     public function store(StorePayslipRequest $request)
     {
-        //
-        
-        $datas = $request->validated();
-        Payslip::create($datas);
+
+ 
+            
+            foreach ($request->payslipData as $data) {
+                
+                Payslip::create([
+                    "payroll_id" => $data["payroll_id"],
+                    'earnings_per_month' => $data['earnings_per_month'],
+                    'earnings_allowance' => $data['earnings_allowance'],
+                    'earnings_night_diff' => $data['earnings_night_diff'],
+                    'earnings_holiday' => $data['earnings_holiday'],
+                    'earnings_retro' => $data['earnings_retro'],
+                    'earnings_commission' => $data['earnings_commission'],
+                    'deductions_lwop' => $data['deductions_lwop'],
+                    'deductions_holding_tax' => $data['deductions_holding_tax'],
+                    'deductions_sss_contribution' => $data['deductions_sss_contribution'],
+                    'deductions_phic_contribution' => $data['deductions_phic_contribution'],
+                    "deductions_hdmf_contribution" => $data["deductions_hdmf_contribution"],
+    
+                    'deductions_hmo_loan' => $data['deductions_hmo_loan'],
+                    'deductions_sss_loan' => $data['deductions_sss_loan'],
+                    "deductions_hdmf_loan" => $data["deductions_hdmf_loan"],
+                    'deductions_ar_others' => $data['deductions_ar_others'],
+
+                    'earnings_total' => $data['earnings_total'],
+                    'deductions_total' => $data['deductions_total'],
+                    'payslip_netPay' => $data['payslip_netPay'],
+                    'pay_period_begin' => $data['pay_period_begin'],
+                    'pay_period_end' => $data['pay_period_end']
+                ]);
+    
+    
+            }
+
+      
+
+    
+ 
         return response()->json([
         'message' => 'Payslip for employee is created successfully!',
         ], 200);
@@ -135,7 +176,6 @@ class PayslipController extends Controller
    
         return response()->json([
             'message' => 'Payslip updated successfully',
-            'position' => $payslip,
         ], 200);
     }
 
