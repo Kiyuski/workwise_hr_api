@@ -8,18 +8,20 @@ use App\Http\Requests\StorePayslipRequest;
 use App\Http\Requests\UpdatePayslipRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 
 class PayslipController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //
 
-     
-        
+        return $request;
+
+    
         $results = Payslip::select(
         "payslips.*", 
         "p.position", 
@@ -58,33 +60,11 @@ class PayslipController extends Controller
      */
     public function store(StorePayslipRequest $request)
     {
-        //
 
-      
-
-                // // Validation rules
-                // $rules = [
-                //     'payslipData.*.payroll_id' => 'unique:employees,employee_id',
-                // ];
-            
-                // // Validation messages
-                // $messages = [
-                //     '_employeeData.*.employee_id.unique' => 'employee id has already been taken',
-                //     '_employeeData.*.employee_id.required' => 'employee id is required',
-                //     '_employeeData.*.department_id.required' => 'department field is required',
-                //     '_employeeData.*.position_id.required' => 'position field is required',
-                // ];
-            
-                // // Validate the request data
-                // $validator = Validator::make($datas, $rules, $messages);
-            
-                // // Check if validation fails
-                // if ($validator->fails()) {
-                //     return response()->json(['errors' => $validator->errors()], 422);
-                // }
-    
+ 
             
             foreach ($request->payslipData as $data) {
+                
                 Payslip::create([
                     "payroll_id" => $data["payroll_id"],
                     'earnings_per_month' => $data['earnings_per_month'],
@@ -98,11 +78,12 @@ class PayslipController extends Controller
                     'deductions_sss_contribution' => $data['deductions_sss_contribution'],
                     'deductions_phic_contribution' => $data['deductions_phic_contribution'],
                     "deductions_hdmf_contribution" => $data["deductions_hdmf_contribution"],
-                    'deductions_hmo' => $data['deductions_hmo'],
-                    'deductions_sss_loan' => $data['deductions_sss_loan'],
+    
                     'deductions_hmo_loan' => $data['deductions_hmo_loan'],
-                    'deductions_employee_loan' => $data['deductions_employee_loan'],
-                    'deductions_others' => $data['deductions_others'],
+                    'deductions_sss_loan' => $data['deductions_sss_loan'],
+                    "deductions_hdmf_loan" => $data["deductions_hdmf_loan"],
+                    'deductions_ar_others' => $data['deductions_ar_others'],
+
                     'earnings_total' => $data['earnings_total'],
                     'deductions_total' => $data['deductions_total'],
                     'payslip_netPay' => $data['payslip_netPay'],

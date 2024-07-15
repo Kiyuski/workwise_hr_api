@@ -39,6 +39,7 @@ class UpdatePayrollRequest extends FormRequest
             'comp_withholding' => 'nullable',
             'comp_sss_loan' => 'nullable',
             'comp_hdmf_loan' => 'nullable|numeric',
+            'comp_hmo_loan' => 'nullable|numeric',
 
        
             'comp_ar_others' => 'nullable|numeric',

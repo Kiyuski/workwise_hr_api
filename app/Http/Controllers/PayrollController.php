@@ -148,6 +148,7 @@ class PayrollController extends Controller
                     'pr.comp_phic' => $data['comp_phic'],
                     'pr.comp_sss_loan' => $data['comp_sss_loan'],
                     'pr.comp_hdmf_loan' => $data['comp_hdmf_loan'],
+                    'pr.comp_hmo_loan' => $data['comp_hmo_loan'],
                     'pr.comp_hdmf' => $data['comp_hdmf'],
                     
                     'pr.comp_number_of_mins' => $data['comp_number_of_mins'],

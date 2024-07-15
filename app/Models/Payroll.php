@@ -26,6 +26,7 @@ class Payroll extends Model
         'comp_withholding',
         'comp_sss_loan',
         'comp_hdmf_loan',
+        'comp_hmo_loan',
        
         'comp_ar_others',
         'comp_retro_others',

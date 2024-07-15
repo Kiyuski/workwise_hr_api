@@ -39,10 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('holiday', HolidayController::class);
     Route::apiResource('leave_type', LeaveTypeController::class);
     Route::apiResource('notification', NotificationController::class);
-    Route::apiResource('payslip', PayslipController::class);
     Route::apiResource('compensation', PayrollController::class);
     Route::apiResource('rates', RatesController::class);
     Route::apiResource('payroll_approved', PayrollApprovedController::class);
+    Route::apiResource('payslip', PayslipController::class);
 
     Route::get('/leave/employee/{id}', [LeaveController::class, 'allEmployeeLeave']);
     Route::get('/verify-email', [SentEmailController::class, 'sendEmail']);

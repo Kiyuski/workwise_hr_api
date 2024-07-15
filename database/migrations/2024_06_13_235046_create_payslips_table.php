@@ -27,13 +27,13 @@ return new class extends Migration
             $table->float('deductions_holding_tax', 10, 2)->nullable();
             $table->float('deductions_sss_contribution', 10, 2)->nullable();
             $table->float('deductions_phic_contribution', 10, 2)->nullable();
-            $table->float('deductions_hmo', 10, 2)->nullable();
-            $table->float('deductions_sss_loan', 10, 2)->nullable();
-            $table->float('deductions_hmo_loan', 10, 2)->nullable();
-            $table->float('deductions_employee_loan', 10, 2)->nullable();
-            $table->float('deductions_others', 10, 2)->nullable();
             $table->float('deductions_hdmf_contribution', 10, 2)->nullable();
-
+            $table->float('deductions_hmo_loan', 10, 2)->nullable();
+            $table->float('deductions_sss_loan', 10, 2)->nullable();
+            $table->float('deductions_hdmf_loan', 10, 2)->nullable();
+ 
+            $table->float('deductions_ar_others', 10, 2)->nullable();
+     
             $table->float('earnings_total', 10, 2)->nullable();
             $table->float('deductions_total', 10, 2)->nullable();
             $table->float('payslip_netPay', 10, 2)->nullable();
